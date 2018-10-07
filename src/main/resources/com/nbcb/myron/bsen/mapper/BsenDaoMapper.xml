@@ -11,5 +11,80 @@
     <select id="getHotProducts" resultType="com.nbcb.myron.bsen.module.Product">
       SELECT * FROM bsen_doorentity i where i.isheat = #{isheat};
     </select>
+    <select id="getStoreInfo" resultType="com.nbcb.myron.bsen.module.StoreInfo">
+      SELECT ID,NAME,AGE,
+      CASE
+      WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.5 THEN CONCAT(GOODSDESC,'##高')
+      WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.2 THEN CONCAT(GOODSDESC,'##平')
+      WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.1 THEN CONCAT(GOODSDESC,'##低')
+      ELSE GOODSDESC END AS GOODSDESC,
+      CASE
+      WHEN CAST(RESPONSESPEED AS DECIMAL(10,2))>0.5 THEN CONCAT(RESPONSESPEED,'##高')
+      WHEN CAST(RESPONSESPEED AS DECIMAL(10,2))>0.2 THEN CONCAT(RESPONSESPEED,'##平')
+      WHEN CAST(RESPONSESPEED AS DECIMAL(10,2))>0.1 THEN CONCAT(RESPONSESPEED,'##低')
+      ELSE RESPONSESPEED END AS RESPONSESPEED,
+      CASE
+      WHEN CAST(DELIVERYSPEED AS DECIMAL(10,2))>0.5 THEN CONCAT(DELIVERYSPEED,'##高')
+      WHEN CAST(DELIVERYSPEED AS DECIMAL(10,2))>0.2 THEN CONCAT(DELIVERYSPEED,'##平')
+      WHEN CAST(DELIVERYSPEED AS DECIMAL(10,2))>0.1 THEN CONCAT(DELIVERYSPEED,'##低')
+      ELSE DELIVERYSPEED END AS DELIVERYSPEED,
+      CASE
+      WHEN CAST(HEADTURN AS DECIMAL(10,2))>0.5 THEN CONCAT(HEADTURN,'##高')
+      WHEN CAST(HEADTURN AS DECIMAL(10,2))>0.2 THEN CONCAT(HEADTURN,'##平')
+      WHEN CAST(HEADTURN AS DECIMAL(10,2))>0.1 THEN CONCAT(HEADTURN,'##低')
+      ELSE HEADTURN END AS HEADTURN,
+      STORESDESC
+      FROM bsen_info i;
+
+    </select>
+    <select id="getDetail" resultMap="productResultMap">
+      SELECT * FROM bsen_doorentity  i where i.id = #{id};
+    </select>
+
+    <resultMap id="productResultMap" type="com.nbcb.myron.bsen.module.Product">
+        <id column="ID" jdbcType="VARCHAR" property="id"/>
+        <result column="IMGURL" jdbcType="VARCHAR" property="imgUrl"/>
+        <result column="DELIVERPRICE" jdbcType="VARCHAR" property="deliverPrice"/>
+        <result column="IMGDESC" jdbcType="VARCHAR" property="imgDesc"/>
+        <result column="DELIVERADDRESS" jdbcType="VARCHAR" property="deliverAddress"/>
+        <result column="TURNOVER" jdbcType="VARCHAR" property="turnOver"/>
+        <result column="PRICE1" jdbcType="VARCHAR" property="price1"/>
+        <result column="PRICE2" jdbcType="VARCHAR" property="price2"/>
+        <result column="PRICE3" jdbcType="VARCHAR" property="price3"/>
+        <result column="MINNUMASTRICT" jdbcType="VARCHAR" property="minNumAstrict"/>
+        <result column="NUMASTRICT" jdbcType="VARCHAR" property="numAstrict"/>
+        <result column="MORENUMASTRICT" jdbcType="VARCHAR" property="moreNumAstrict"/>
+        <result column="ISHEAT" jdbcType="VARCHAR" property="isHeat"/>
+        <result column="CONTENTIMGS" jdbcType="VARCHAR" property="contentimgs"/>
+        <collection column="{bridgeId1=ID}" property="propertys" ofType="com.nbcb.myron.bsen.module.Property"
+                    select="getProperty">
+        </collection>
+        <collection column="{bridgeId2=ID}" property="recommends" ofType="com.nbcb.myron.bsen.module.RecommendProduct"
+                    select="getRecommends">
+        </collection>
+    </resultMap>
+
+    <resultMap id="PropertyResultMap" type="com.nbcb.myron.bsen.module.Property">
+        <result column="NAME" jdbcType="VARCHAR" property="name"/>
+        <result column="PROPERTY" jdbcType="VARCHAR" property="property"/>
+    </resultMap>
+
+    <select id="getProperty" resultMap="PropertyResultMap">
+        select NAME,PROPERTY
+        from bsen_door_property a
+        where  a.ID = #{bridgeId1};
+    </select>
+
+    <resultMap id="recommendsResultMap" type="com.nbcb.myron.bsen.module.RecommendProduct">
+        <result column="ID" jdbcType="VARCHAR" property="id"/>
+        <result column="IMGURL" jdbcType="VARCHAR" property="imgUrl"/>
+        <result column="PRICE2" jdbcType="VARCHAR" property="price"/>
+    </resultMap>
+
+    <select id="getRecommends" resultMap="recommendsResultMap">
+        select ID,IMGURL,PRICE2
+        from bsen_doorentity a
+        where  a.ID &lt;&gt; #{bridgeId2};
+    </select>
 
 </mapper>

@@ -2,6 +2,7 @@ package com.nbcb.myron.bsen.mapper;
 
 import com.nbcb.myron.bsen.module.ImageEntity;
 import com.nbcb.myron.bsen.module.Product;
+import com.nbcb.myron.bsen.module.StoreInfo;
 
 import java.util.List;
 
@@ -12,5 +13,10 @@ public interface BsenDaoMapper {
     ImageEntity getImageEntity(String id);
 
     List<Product> getHotProducts(String isheat);
+
+    StoreInfo getStoreInfo();
+
+    Product getDetail(String id);
+
 
 }

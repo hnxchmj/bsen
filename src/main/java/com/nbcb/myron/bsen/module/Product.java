@@ -1,5 +1,7 @@
 package com.nbcb.myron.bsen.module;
 
+import java.util.List;
+
 public class Product {
     private String id;
     private String imgUrl;
@@ -12,8 +14,11 @@ public class Product {
     private String price3;
     private String minNumAstrict;
     private String numAstrict;
-    private String maxNumAstrict;
+    private String moreNumAstrict;
     private String isHeat;
+    private String contentimgs;
+    private List<Property> propertys;
+    private List<RecommendProduct> recommends;
 
     public String getId() {
         return id;
@@ -103,12 +108,12 @@ public class Product {
         this.numAstrict = numAstrict;
     }
 
-    public String getMaxNumAstrict() {
-        return maxNumAstrict;
+    public String getMoreNumAstrict() {
+        return moreNumAstrict;
     }
 
-    public void setMaxNumAstrict(String maxNumAstrict) {
-        this.maxNumAstrict = maxNumAstrict;
+    public void setMoreNumAstrict(String moreNumAstrict) {
+        this.moreNumAstrict = moreNumAstrict;
     }
 
     public String getIsHeat() {
@@ -117,5 +122,29 @@ public class Product {
 
     public void setIsHeat(String isHeat) {
         this.isHeat = isHeat;
+    }
+
+    public String getContentimgs() {
+        return contentimgs;
+    }
+
+    public void setContentimgs(String contentimgs) {
+        this.contentimgs = contentimgs;
+    }
+
+    public List<Property> getPropertys() {
+        return propertys;
+    }
+
+    public void setPropertys(List<Property> propertys) {
+        this.propertys = propertys;
+    }
+
+    public List<RecommendProduct> getRecommends() {
+        return recommends;
+    }
+
+    public void setRecommends(List<RecommendProduct> recommends) {
+        this.recommends = recommends;
     }
 }
