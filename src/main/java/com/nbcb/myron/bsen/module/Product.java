@@ -19,6 +19,7 @@ public class Product {
     private String contentimgs;
     private List<Property> propertys;
     private List<RecommendProduct> recommends;
+    private String repertory;
 
     public String getId() {
         return id;
@@ -146,5 +147,13 @@ public class Product {
 
     public void setRecommends(List<RecommendProduct> recommends) {
         this.recommends = recommends;
+    }
+
+    public String getRepertory() {
+        return repertory;
+    }
+
+    public void setRepertory(String repertory) {
+        this.repertory = repertory;
     }
 }
