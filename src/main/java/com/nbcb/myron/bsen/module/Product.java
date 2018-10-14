@@ -15,6 +15,7 @@ public class Product {
     private String minNumAstrict;
     private String numAstrict;
     private String moreNumAstrict;
+    private String statisfaction;
     private String isHeat;
     private String contentimgs;
     private List<Property> propertys;
@@ -115,6 +116,14 @@ public class Product {
 
     public void setMoreNumAstrict(String moreNumAstrict) {
         this.moreNumAstrict = moreNumAstrict;
+    }
+
+    public String getStatisfaction() {
+        return statisfaction;
+    }
+
+    public void setStatisfaction(String statisfaction) {
+        this.statisfaction = statisfaction;
     }
 
     public String getIsHeat() {

@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nbcb.myron.bsen.mapper.BsenDaoMapper">
+    <select id="getEvaluate" resultType="com.nbcb.myron.bsen.module.PrcEvaluate">
+      SELECT oi.*,ui.nickname FROM user_info ui LEFT JOIN order_info oi ON
+       oi.userid =ui.USERID AND oi.ID =#{id}
+    </select>
     <select id="getImageEntityList" resultType="com.nbcb.myron.bsen.module.ImageEntity">
       SELECT i.imgurl,i.urlparam FROM bsen_imglink i LIMIT 3;
     </select>

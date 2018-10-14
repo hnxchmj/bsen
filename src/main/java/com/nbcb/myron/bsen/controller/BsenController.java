@@ -2,6 +2,7 @@ package com.nbcb.myron.bsen.controller;
 
 import com.nbcb.myron.bsen.mapper.BsenDaoMapper;
 import com.nbcb.myron.bsen.module.ImageEntity;
+import com.nbcb.myron.bsen.module.PrcEvaluate;
 import com.nbcb.myron.bsen.module.Product;
 import com.nbcb.myron.bsen.module.StoreInfo;
 import net.sf.json.JSONObject;
@@ -61,6 +62,24 @@ public class BsenController {
         //获取店铺信息
         StoreInfo storeInfo = bsenDaoMapper.getStoreInfo();
         data.put("storeInfo", storeInfo);
+        resultMap.put("data", data);
+        resultMap.put("code", "0000");
+        resultMap.put("msg", "success");
+        JSONObject response = JSONObject.fromObject(resultMap);
+        logger.info("##response: " + response.toString());
+        return response;
+    }
+
+    @GetMapping("evaluate")
+    public JSONObject getDetailEvaluate(@RequestParam String id ) {
+        logger.info("##进入bsen获取详情页用户评价##");
+        Map<String, Object> resultMap = new HashMap<>();
+        JSONObject data = new JSONObject();
+        //获取详情页评价
+        List<PrcEvaluate> evaluateArr = bsenDaoMapper.getEvaluate(id);
+        data.put("evaluate", evaluateArr);
+
+        //封装返回数据
         resultMap.put("data", data);
         resultMap.put("code", "0000");
         resultMap.put("msg", "success");
