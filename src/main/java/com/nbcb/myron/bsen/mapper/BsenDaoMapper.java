@@ -1,9 +1,6 @@
 package com.nbcb.myron.bsen.mapper;
 
-import com.nbcb.myron.bsen.module.ImageEntity;
-import com.nbcb.myron.bsen.module.PrcEvaluate;
-import com.nbcb.myron.bsen.module.Product;
-import com.nbcb.myron.bsen.module.StoreInfo;
+import com.nbcb.myron.bsen.module.*;
 
 import java.util.List;
 
@@ -20,6 +17,5 @@ public interface BsenDaoMapper {
     Product getDetail(String id);
 
     List<PrcEvaluate> getEvaluate(String id);
-
 
 }

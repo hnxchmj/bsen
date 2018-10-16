@@ -9,6 +9,8 @@ public class StoreInfo {
     private String deliveryspeed;
     private String headturn;
     private String storesdesc;
+    private String storeMedal;
+    private String fans;
 
     public String getId() {
         return id;
@@ -72,5 +74,21 @@ public class StoreInfo {
 
     public void setStoresdesc(String storesdesc) {
         this.storesdesc = storesdesc;
+    }
+
+    public String getStoreMedal() {
+        return storeMedal;
+    }
+
+    public void setStoreMedal(String storeMedal) {
+        this.storeMedal = storeMedal;
+    }
+
+    public String getFans() {
+        return fans;
+    }
+
+    public void setFans(String fans) {
+        this.fans = fans;
     }
 }

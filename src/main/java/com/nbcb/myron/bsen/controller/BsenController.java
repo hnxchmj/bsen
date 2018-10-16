@@ -1,10 +1,7 @@
 package com.nbcb.myron.bsen.controller;
 
 import com.nbcb.myron.bsen.mapper.BsenDaoMapper;
-import com.nbcb.myron.bsen.module.ImageEntity;
-import com.nbcb.myron.bsen.module.PrcEvaluate;
-import com.nbcb.myron.bsen.module.Product;
-import com.nbcb.myron.bsen.module.StoreInfo;
+import com.nbcb.myron.bsen.module.*;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +29,9 @@ public class BsenController {
         logger.info("##进入bsen获取首页数据##");
         Map<String, Object> resultMap = new HashMap<>();
         JSONObject data = new JSONObject();
+        //获取店铺信息
+        StoreInfo stroeInfo = bsenDaoMapper.getStoreInfo();
+        data.put("stroeInfo", stroeInfo);
         //获取首页头部轮播图数据
         List<ImageEntity> iEntityList = bsenDaoMapper.getImageEntityList();
         data.put("headimgswiper", iEntityList);

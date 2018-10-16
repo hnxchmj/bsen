@@ -16,7 +16,11 @@
       SELECT * FROM bsen_doorentity i where i.isheat = #{isheat};
     </select>
     <select id="getStoreInfo" resultType="com.nbcb.myron.bsen.module.StoreInfo">
-      SELECT ID,NAME,AGE,
+      SELECT ID,
+      NAME,
+      AGE,
+      STOREMEDAL,
+      FANS,
       CASE
       WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.5 THEN CONCAT(GOODSDESC,'##高')
       WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.2 THEN CONCAT(GOODSDESC,'##平')
