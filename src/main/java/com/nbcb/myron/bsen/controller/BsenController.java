@@ -41,7 +41,8 @@ public class BsenController {
         data.put("bodyImgObj", iEntity);
 
         //获取热销商品数据
-        List<Product> hotPros = bsenDaoMapper.getHotProducts("是");
+        String isheat = "是";
+        List<Product> hotPros = bsenDaoMapper.getAllProducts(isheat);
         data.put("prcItems", hotPros);
         resultMap.put("data", data);
         resultMap.put("code", "0000");
@@ -78,6 +79,25 @@ public class BsenController {
         //获取详情页评价
         List<PrcEvaluate> evaluateArr = bsenDaoMapper.getEvaluate(id);
         data.put("evaluate", evaluateArr);
+
+        //封装返回数据
+        resultMap.put("data", data);
+        resultMap.put("code", "0000");
+        resultMap.put("msg", "success");
+        JSONObject response = JSONObject.fromObject(resultMap);
+        logger.info("##response: " + response.toString());
+        return response;
+    }
+
+    @GetMapping("allproducts")
+    public JSONObject allproducts() {
+        logger.info("##进入bsen获取全部商品##");
+        Map<String, Object> resultMap = new HashMap<>();
+        JSONObject data = new JSONObject();
+        //获取全部商品
+        String isheat = "";
+        List<Product> prcItems = bsenDaoMapper.getAllProducts(isheat);
+        data.put("prcItems", prcItems);
 
         //封装返回数据
         resultMap.put("data", data);

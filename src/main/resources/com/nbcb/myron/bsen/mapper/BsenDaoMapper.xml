@@ -12,8 +12,13 @@
     <select id="getImageEntity" resultType="com.nbcb.myron.bsen.module.ImageEntity">
       SELECT i.imgurl,i.urlparam FROM bsen_imglink i where i.bid = #{id};
     </select>
-    <select id="getHotProducts" resultType="com.nbcb.myron.bsen.module.Product">
-      SELECT * FROM bsen_doorentity i where i.isheat = #{isheat};
+    <select id="getAllProducts" resultType="com.nbcb.myron.bsen.module.Product">
+      SELECT * FROM bsen_doorentity i
+        <trim prefix="WHERE" prefixOverrides="and">
+            <if test="isheat!=null and isheat!=''">
+                i.isheat = #{isheat}
+            </if>
+        </trim>
     </select>
     <select id="getStoreInfo" resultType="com.nbcb.myron.bsen.module.StoreInfo">
       SELECT ID,

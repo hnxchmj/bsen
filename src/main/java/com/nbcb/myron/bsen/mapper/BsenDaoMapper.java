@@ -1,6 +1,7 @@
 package com.nbcb.myron.bsen.mapper;
 
 import com.nbcb.myron.bsen.module.*;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface BsenDaoMapper {
 
     ImageEntity getImageEntity(String id);
 
-    List<Product> getHotProducts(String isheat);
+    List<Product> getAllProducts(@Param(value ="isheat" ) String isheat);
 
     StoreInfo getStoreInfo();
 
