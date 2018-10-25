@@ -1,6 +1,6 @@
 package com.nbcb.myron.bsen.module;
 
-public class PrcEvaluate {
+public class ProductEvaluateExt extends Product {
 
     private String orderId;
     private String userId;

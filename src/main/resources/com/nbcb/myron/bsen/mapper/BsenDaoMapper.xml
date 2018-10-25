@@ -2,10 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nbcb.myron.bsen.mapper.BsenDaoMapper">
-    <select id="getEvaluate" resultType="com.nbcb.myron.bsen.module.PrcEvaluate">
-      SELECT oi.*,ui.nickname FROM user_info ui LEFT JOIN order_info oi ON
-       oi.userid =ui.USERID AND oi.ID =#{id}
+    <!--获取商品评价-->
+    <select id="getEvaluate" resultType="com.nbcb.myron.bsen.module.ProductEvaluateExt">
+      SELECT i.ORDERID,i.USERID,i.ID,i.TURNOVER,i.PRICE,i.EVALUATE,i.TIME,u.NICKNAME FROM user_info u LEFT JOIN order_info i ON
+       i.userid =u.USERID AND i.ID =#{id}
     </select>
+
     <select id="getImageEntityList" resultType="com.nbcb.myron.bsen.module.ImageEntity">
       SELECT i.imgurl,i.urlparam FROM bsen_imglink i LIMIT 3;
     </select>
@@ -13,13 +15,14 @@
       SELECT i.imgurl,i.urlparam FROM bsen_imglink i where i.bid = #{id};
     </select>
     <select id="getAllProducts" resultType="com.nbcb.myron.bsen.module.Product">
-      SELECT * FROM bsen_doorentity i
+        SELECT * FROM bsen_doorentity i
         <trim prefix="WHERE" prefixOverrides="and">
             <if test="isheat!=null and isheat!=''">
                 i.isheat = #{isheat}
             </if>
         </trim>
     </select>
+    <!--查询店铺信息-->
     <select id="getStoreInfo" resultType="com.nbcb.myron.bsen.module.StoreInfo">
       SELECT ID,
       NAME,
@@ -50,55 +53,37 @@
       FROM bsen_info i;
 
     </select>
-    <select id="getDetail" resultMap="productResultMap">
-      SELECT * FROM bsen_doorentity  i where i.id = #{id};
+<!--查询商品详情-->
+    <select id="getDetail" resultType="com.nbcb.myron.bsen.module.ProductPropertyExt">
+      SELECT
+          i.PID,
+          i.ID,
+          i.IMGURL,
+          i.DELIVERPRICE,
+          i.IMGDESC,
+          i.DELIVERADDRESS,
+          i.TURNOVER,
+          i.PRICE1,
+          i.PRICE2,
+          i.PRICE3,
+          i.MINNUMASTRICT,
+          i.NUMASTRICT,
+          i.MORENUMASTRICT,
+          i.STATISFACTION,
+          i.ISHEAT,
+          i.CONTENTIMGS,
+          i.REPERTORY,
+          <include refid="ProductProperty"></include>
+        FROM bsen_doorentity i
+          LEFT JOIN bsen_doorentity_property j
+            ON i.ID = j.ID
+        WHERE i.id = #{id};
     </select>
-
-    <resultMap id="productResultMap" type="com.nbcb.myron.bsen.module.Product">
-        <id column="ID" jdbcType="VARCHAR" property="id"/>
-        <result column="IMGURL" jdbcType="VARCHAR" property="imgUrl"/>
-        <result column="DELIVERPRICE" jdbcType="VARCHAR" property="deliverPrice"/>
-        <result column="IMGDESC" jdbcType="VARCHAR" property="imgDesc"/>
-        <result column="DELIVERADDRESS" jdbcType="VARCHAR" property="deliverAddress"/>
-        <result column="TURNOVER" jdbcType="VARCHAR" property="turnOver"/>
-        <result column="PRICE1" jdbcType="VARCHAR" property="price1"/>
-        <result column="PRICE2" jdbcType="VARCHAR" property="price2"/>
-        <result column="PRICE3" jdbcType="VARCHAR" property="price3"/>
-        <result column="MINNUMASTRICT" jdbcType="VARCHAR" property="minNumAstrict"/>
-        <result column="NUMASTRICT" jdbcType="VARCHAR" property="numAstrict"/>
-        <result column="MORENUMASTRICT" jdbcType="VARCHAR" property="moreNumAstrict"/>
-        <result column="ISHEAT" jdbcType="VARCHAR" property="isHeat"/>
-        <result column="CONTENTIMGS" jdbcType="VARCHAR" property="contentimgs"/>
-        <result column="REPERTORY" jdbcType="VARCHAR" property="repertory"/>
-        <collection column="{bridgeId1=ID}" property="propertys" ofType="com.nbcb.myron.bsen.module.Property"
-                    select="getProperty">
-        </collection>
-        <collection column="{bridgeId2=ID}" property="recommends" ofType="com.nbcb.myron.bsen.module.RecommendProduct"
-                    select="getRecommends">
-        </collection>
-    </resultMap>
-
-    <resultMap id="PropertyResultMap" type="com.nbcb.myron.bsen.module.Property">
-        <result column="NAME" jdbcType="VARCHAR" property="name"/>
-        <result column="PROPERTY" jdbcType="VARCHAR" property="property"/>
-    </resultMap>
-
-    <select id="getProperty" resultMap="PropertyResultMap">
-        select NAME,PROPERTY
-        from bsen_door_property a
-        where  a.ID = #{bridgeId1};
-    </select>
-
-    <resultMap id="recommendsResultMap" type="com.nbcb.myron.bsen.module.RecommendProduct">
-        <result column="ID" jdbcType="VARCHAR" property="id"/>
-        <result column="IMGURL" jdbcType="VARCHAR" property="imgUrl"/>
-        <result column="PRICE2" jdbcType="VARCHAR" property="price"/>
-    </resultMap>
-
-    <select id="getRecommends" resultMap="recommendsResultMap">
-        select ID,IMGURL,PRICE2
-        from bsen_doorentity a
-        where  a.ID &lt;&gt; #{bridgeId2};
-    </select>
+    <!--查询商品属性代码片段-->
+    <sql id="ProductProperty">
+        j.PRCCLASS,j.ARTNO,j.BRAND,j.TEXTURE,j.WOOD,j.METAL,j.SWITCHTYPE,j.WORKMANSHIP,j.SPECIALPURPOSE,j.USABLERANGE,
+          j.QUALITYGRADE,j.SAFETYLEVEL,j.COMPRESSIVESTRENGTH,j.WATERTIGHTNESS,j.HARDNESS,j.PENDULUMIMPACT,j.WINDRESISTANCE,
+          j.MOEISB,j.TYS,j.STYLE,j.COLOR,j.PLACEOFORGIN,j.WZCJ,j.WTFT,j.POFT,j.DOORMAXSIZE,j.DOORTHICKNESS,j.WCB
+    </sql>
 
 </mapper>

@@ -72,12 +72,12 @@ public class BsenController {
     }
 
     @GetMapping("evaluate")
-    public JSONObject getDetailEvaluate(@RequestParam String id ) {
+    public JSONObject getProductEvaluate(@RequestParam String id ) {
         logger.info("##进入bsen获取详情页用户评价##");
         Map<String, Object> resultMap = new HashMap<>();
         JSONObject data = new JSONObject();
         //获取详情页评价
-        List<PrcEvaluate> evaluateArr = bsenDaoMapper.getEvaluate(id);
+        List<ProductEvaluateExt> evaluateArr = bsenDaoMapper.getEvaluate(id);
         data.put("evaluate", evaluateArr);
 
         //封装返回数据

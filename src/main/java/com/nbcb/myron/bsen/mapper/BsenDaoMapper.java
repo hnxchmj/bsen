@@ -15,8 +15,8 @@ public interface BsenDaoMapper {
 
     StoreInfo getStoreInfo();
 
-    Product getDetail(String id);
+    ProductPropertyExt getDetail(String id);
 
-    List<PrcEvaluate> getEvaluate(String id);
+    List<ProductEvaluateExt> getEvaluate(String id);
 
 }

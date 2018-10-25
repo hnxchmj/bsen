@@ -18,8 +18,6 @@ public class Product {
     private String statisfaction;
     private String isHeat;
     private String contentimgs;
-    private List<Property> propertys;
-    private List<RecommendProduct> recommends;
     private String repertory;
 
     public String getId() {
@@ -140,22 +138,6 @@ public class Product {
 
     public void setContentimgs(String contentimgs) {
         this.contentimgs = contentimgs;
-    }
-
-    public List<Property> getPropertys() {
-        return propertys;
-    }
-
-    public void setPropertys(List<Property> propertys) {
-        this.propertys = propertys;
-    }
-
-    public List<RecommendProduct> getRecommends() {
-        return recommends;
-    }
-
-    public void setRecommends(List<RecommendProduct> recommends) {
-        this.recommends = recommends;
     }
 
     public String getRepertory() {
