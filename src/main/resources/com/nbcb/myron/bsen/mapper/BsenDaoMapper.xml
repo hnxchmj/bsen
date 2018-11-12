@@ -2,26 +2,47 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nbcb.myron.bsen.mapper.BsenDaoMapper">
-    <!--获取商品评价-->
-    <select id="getEvaluate" resultType="com.nbcb.myron.bsen.module.ProductEvaluateExt">
-      SELECT i.ORDERID,i.USERID,i.ID,i.TURNOVER,i.PRICE,i.EVALUATE,i.TIME,u.NICKNAME FROM user_info u LEFT JOIN order_info i ON
-       i.userid =u.USERID AND i.ID =#{id}
+
+    <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity">
+        select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
     </select>
 
     <select id="getImageEntityList" resultType="com.nbcb.myron.bsen.module.ImageEntity">
-      SELECT i.imgurl,i.urlparam FROM bsen_imglink i LIMIT 3;
+      SELECT i.pid id,i.t_url imgPath,i.t_url_name imgName FROM products i WHERE i.is_true = '0';
     </select>
-    <select id="getImageEntity" resultType="com.nbcb.myron.bsen.module.ImageEntity">
-      SELECT i.imgurl,i.urlparam FROM bsen_imglink i where i.bid = #{id};
+
+    <select id="getCutProducts" resultType="com.nbcb.myron.bsen.module.CutProduct">
+      SELECT
+          i.pid  id,
+          i.desc,
+          CONCAT(i.d_path,i.d_img) imgUrl,
+          i.price oldPrice,
+          i.cutting_num cutPriceNum,
+          i.cuted_price newPrice
+        FROM products i
+        WHERE i.is_cut = '0';
     </select>
-    <select id="getAllProducts" resultType="com.nbcb.myron.bsen.module.Product">
-        SELECT * FROM bsen_doorentity i
-        <trim prefix="WHERE" prefixOverrides="and">
-            <if test="isheat!=null and isheat!=''">
-                i.isheat = #{isheat}
-            </if>
-        </trim>
+
+    <select id="getBoutiqueProducts" resultType="com.nbcb.myron.bsen.module.BoutiqueProduct">
+        SELECT
+          i.pid            id,
+          CONCAT(i.i_path,i.i_one)    imgUrl,
+          i.desc,
+          i.price          oldPrice,
+          i.cuted_price    newPrice
+        FROM products i
+        WHERE i.soldnum > '200';
     </select>
+
+
+    <!--获取商品评价-->
+    <select id="getEvaluate" resultType="com.nbcb.myron.bsen.module.ProductEvaluateExt">
+        SELECT i.ORDERID,i.USERID,i.ID,i.TURNOVER,i.PRICE,i.EVALUATE,i.TIME,u.NICKNAME FROM user_info u LEFT JOIN order_info i ON
+        i.userid =u.USERID AND i.ID =#{id}
+    </select>
+
+
+
     <!--查询店铺信息-->
     <select id="getStoreInfo" resultType="com.nbcb.myron.bsen.module.StoreInfo">
       SELECT ID,
@@ -54,7 +75,7 @@
 
     </select>
 <!--查询商品详情-->
-    <select id="getDetail" resultType="com.nbcb.myron.bsen.module.ProductPropertyExt">
+    <select id="getDetail" resultType="com.nbcb.myron.bsen.module.BoutiqueProduct">
       SELECT
           i.PID,
           i.ID,

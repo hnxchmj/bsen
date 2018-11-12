@@ -1,22 +1,31 @@
 package com.nbcb.myron.bsen.module;
 
 public class ImageEntity {
-    private String imgUrl;
-    private String urlParam;
+    private String id;
+    private String imgPath;
+    private String imgName;
 
-    public String getImgUrl() {
-        return imgUrl;
+    public String getId() {
+        return id;
     }
 
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public String getUrlParam() {
-        return urlParam;
+    public String getImgPath() {
+        return imgPath;
     }
 
-    public void setUrlParam(String urlParam) {
-        this.urlParam = urlParam;
+    public void setImgPath(String imgPath) {
+        this.imgPath = imgPath;
+    }
+
+    public String getImgName() {
+        return imgName;
+    }
+
+    public void setImgName(String imgName) {
+        this.imgName = imgName;
     }
 }

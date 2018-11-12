@@ -7,15 +7,19 @@ import java.util.List;
 
 public interface BsenDaoMapper {
 
+    DictEntity getHttpAddress(@Param("dicttypeid") String dicttypeid,@Param("dictid") String dictid);
+
     List<ImageEntity> getImageEntityList();
 
-    ImageEntity getImageEntity(String id);
+    List<CutProduct> getCutProducts();
 
-    List<Product> getAllProducts(@Param(value ="isheat" ) String isheat);
+    List<BoutiqueProduct> getBoutiqueProducts();
+
+    List<ProductList> getProductLists(String classifyId);
 
     StoreInfo getStoreInfo();
 
-    ProductPropertyExt getDetail(String id);
+    BoutiqueProduct getDetail(String id);
 
     List<ProductEvaluateExt> getEvaluate(String id);
 
