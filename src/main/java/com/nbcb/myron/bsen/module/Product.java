@@ -3,22 +3,16 @@ package com.nbcb.myron.bsen.module;
 import java.util.List;
 
 public class Product {
-    private String id;
-    private String imgUrl;
-    private String deliverPrice;
-    private String imgDesc;
-    private String deliverAddress;
-    private String turnOver;
-    private String price1;
-    private String price2;
-    private String price3;
-    private String minNumAstrict;
-    private String numAstrict;
-    private String moreNumAstrict;
-    private String statisfaction;
-    private String isHeat;
-    private String contentimgs;
-    private String repertory;
+    private String id;//商品id
+    private List<ProductImg> imgUrls;//轮播图集合
+    private String oldPrice;//原价
+    private String newPrice;//折后价
+    private String deliverPrice;//运费
+    private String desc;//商品描述
+    private String soldNum;//已售
+    private String browseNum;//已浏览次数
+    private List<ProductImg> detailImgUrls;//详情图片列表
+    private List<User> evaluates;//商品评价
 
     public String getId() {
         return id;
@@ -28,12 +22,28 @@ public class Product {
         this.id = id;
     }
 
-    public String getImgUrl() {
-        return imgUrl;
+    public List<ProductImg> getImgUrls() {
+        return imgUrls;
     }
 
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
+    public void setImgUrls(List<ProductImg> imgUrls) {
+        this.imgUrls = imgUrls;
+    }
+
+    public String getOldPrice() {
+        return oldPrice;
+    }
+
+    public void setOldPrice(String oldPrice) {
+        this.oldPrice = oldPrice;
+    }
+
+    public String getNewPrice() {
+        return newPrice;
+    }
+
+    public void setNewPrice(String newPrice) {
+        this.newPrice = newPrice;
     }
 
     public String getDeliverPrice() {
@@ -44,107 +54,43 @@ public class Product {
         this.deliverPrice = deliverPrice;
     }
 
-    public String getImgDesc() {
-        return imgDesc;
+    public String getDesc() {
+        return desc;
     }
 
-    public void setImgDesc(String imgDesc) {
-        this.imgDesc = imgDesc;
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
 
-    public String getDeliverAddress() {
-        return deliverAddress;
+    public String getSoldNum() {
+        return soldNum;
     }
 
-    public void setDeliverAddress(String deliverAddress) {
-        this.deliverAddress = deliverAddress;
+    public void setSoldNum(String soldNum) {
+        this.soldNum = soldNum;
     }
 
-    public String getTurnOver() {
-        return turnOver;
+    public String getBrowseNum() {
+        return browseNum;
     }
 
-    public void setTurnOver(String turnOver) {
-        this.turnOver = turnOver;
+    public void setBrowseNum(String browseNum) {
+        this.browseNum = browseNum;
     }
 
-    public String getPrice1() {
-        return price1;
+    public List<ProductImg> getDetailImgUrls() {
+        return detailImgUrls;
     }
 
-    public void setPrice1(String price1) {
-        this.price1 = price1;
+    public void setDetailImgUrls(List<ProductImg> detailImgUrls) {
+        this.detailImgUrls = detailImgUrls;
     }
 
-    public String getPrice2() {
-        return price2;
+    public List<User> getEvaluates() {
+        return evaluates;
     }
 
-    public void setPrice2(String price2) {
-        this.price2 = price2;
-    }
-
-    public String getPrice3() {
-        return price3;
-    }
-
-    public void setPrice3(String price3) {
-        this.price3 = price3;
-    }
-
-    public String getMinNumAstrict() {
-        return minNumAstrict;
-    }
-
-    public void setMinNumAstrict(String minNumAstrict) {
-        this.minNumAstrict = minNumAstrict;
-    }
-
-    public String getNumAstrict() {
-        return numAstrict;
-    }
-
-    public void setNumAstrict(String numAstrict) {
-        this.numAstrict = numAstrict;
-    }
-
-    public String getMoreNumAstrict() {
-        return moreNumAstrict;
-    }
-
-    public void setMoreNumAstrict(String moreNumAstrict) {
-        this.moreNumAstrict = moreNumAstrict;
-    }
-
-    public String getStatisfaction() {
-        return statisfaction;
-    }
-
-    public void setStatisfaction(String statisfaction) {
-        this.statisfaction = statisfaction;
-    }
-
-    public String getIsHeat() {
-        return isHeat;
-    }
-
-    public void setIsHeat(String isHeat) {
-        this.isHeat = isHeat;
-    }
-
-    public String getContentimgs() {
-        return contentimgs;
-    }
-
-    public void setContentimgs(String contentimgs) {
-        this.contentimgs = contentimgs;
-    }
-
-    public String getRepertory() {
-        return repertory;
-    }
-
-    public void setRepertory(String repertory) {
-        this.repertory = repertory;
+    public void setEvaluates(List<User> evaluates) {
+        this.evaluates = evaluates;
     }
 }

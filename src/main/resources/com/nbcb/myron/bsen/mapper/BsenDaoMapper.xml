@@ -3,108 +3,131 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nbcb.myron.bsen.mapper.BsenDaoMapper">
 
+<!--获得http ip-->
     <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity">
         select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
     </select>
 
+<!--获取首页商品头部轮播图-->
     <select id="getImageEntityList" resultType="com.nbcb.myron.bsen.module.ImageEntity">
       SELECT i.pid id,i.t_url imgPath,i.t_url_name imgName FROM products i WHERE i.is_true = '0';
     </select>
 
-    <select id="getCutProducts" resultType="com.nbcb.myron.bsen.module.CutProduct">
+<!--砍价商品-->
+    <select id="getBestCutProducts" resultType="com.nbcb.myron.bsen.module.CutProduct">
       SELECT
           i.pid  id,
           i.desc,
-          CONCAT(i.d_path,i.d_img) imgUrl,
+          CONCAT(j.path,j.filename) imgUrl,
           i.price oldPrice,
           i.cutting_num cutPriceNum,
           i.cuted_price newPrice
         FROM products i
-        WHERE i.is_cut = '0';
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE i.is_cut = '0' AND j.classify ='2'AND i.cutting_num > 50;
     </select>
 
+<!--精品-->
     <select id="getBoutiqueProducts" resultType="com.nbcb.myron.bsen.module.BoutiqueProduct">
         SELECT
+          i.pid id,
+          CONCAT(j.path,j.filename) imgUrl,
+          i.desc,
+          i.price oldPrice,
+          i.cuted_price newPrice
+        FROM products i
+          LEFT JOIN products_files j
+            ON i.pid = j.pid
+        WHERE j.classify = '0'
+            AND i.soldnum > '200'
+        GROUP BY i.pid;
+    </select>
+
+<!--全部分类商品-->
+    <select id="getProductLists" resultType="com.nbcb.myron.bsen.module.ProductList">
+        SELECT
           i.pid            id,
-          CONCAT(i.i_path,i.i_one)    imgUrl,
           i.desc,
           i.price          oldPrice,
-          i.cuted_price    newPrice
+          i.cuted_price    newPrice,
+          i.soldnum        soldNum,
+          i.browsenum      browseNum,
+          CONCAT(j.path,j.filename)    imgUrl
         FROM products i
-        WHERE i.soldnum > '200';
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE i.classify =#{classifyId} AND j.classify='2';
     </select>
 
-
-    <!--获取商品评价-->
-    <select id="getEvaluate" resultType="com.nbcb.myron.bsen.module.ProductEvaluateExt">
-        SELECT i.ORDERID,i.USERID,i.ID,i.TURNOVER,i.PRICE,i.EVALUATE,i.TIME,u.NICKNAME FROM user_info u LEFT JOIN order_info i ON
-        i.userid =u.USERID AND i.ID =#{id}
-    </select>
-
-
-
-    <!--查询店铺信息-->
-    <select id="getStoreInfo" resultType="com.nbcb.myron.bsen.module.StoreInfo">
-      SELECT ID,
-      NAME,
-      AGE,
-      STOREMEDAL,
-      FANS,
-      CASE
-      WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.5 THEN CONCAT(GOODSDESC,'##高')
-      WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.2 THEN CONCAT(GOODSDESC,'##平')
-      WHEN CAST(GOODSDESC AS DECIMAL(10,2))>0.1 THEN CONCAT(GOODSDESC,'##低')
-      ELSE GOODSDESC END AS GOODSDESC,
-      CASE
-      WHEN CAST(RESPONSESPEED AS DECIMAL(10,2))>0.5 THEN CONCAT(RESPONSESPEED,'##高')
-      WHEN CAST(RESPONSESPEED AS DECIMAL(10,2))>0.2 THEN CONCAT(RESPONSESPEED,'##平')
-      WHEN CAST(RESPONSESPEED AS DECIMAL(10,2))>0.1 THEN CONCAT(RESPONSESPEED,'##低')
-      ELSE RESPONSESPEED END AS RESPONSESPEED,
-      CASE
-      WHEN CAST(DELIVERYSPEED AS DECIMAL(10,2))>0.5 THEN CONCAT(DELIVERYSPEED,'##高')
-      WHEN CAST(DELIVERYSPEED AS DECIMAL(10,2))>0.2 THEN CONCAT(DELIVERYSPEED,'##平')
-      WHEN CAST(DELIVERYSPEED AS DECIMAL(10,2))>0.1 THEN CONCAT(DELIVERYSPEED,'##低')
-      ELSE DELIVERYSPEED END AS DELIVERYSPEED,
-      CASE
-      WHEN CAST(HEADTURN AS DECIMAL(10,2))>0.5 THEN CONCAT(HEADTURN,'##高')
-      WHEN CAST(HEADTURN AS DECIMAL(10,2))>0.2 THEN CONCAT(HEADTURN,'##平')
-      WHEN CAST(HEADTURN AS DECIMAL(10,2))>0.1 THEN CONCAT(HEADTURN,'##低')
-      ELSE HEADTURN END AS HEADTURN,
-      STORESDESC
-      FROM bsen_info i;
-
-    </select>
-<!--查询商品详情-->
-    <select id="getDetail" resultType="com.nbcb.myron.bsen.module.BoutiqueProduct">
+<!--获取商品详情-->
+    <select id="getDetail" resultMap="SwipeImgs">
       SELECT
-          i.PID,
-          i.ID,
-          i.IMGURL,
-          i.DELIVERPRICE,
-          i.IMGDESC,
-          i.DELIVERADDRESS,
-          i.TURNOVER,
-          i.PRICE1,
-          i.PRICE2,
-          i.PRICE3,
-          i.MINNUMASTRICT,
-          i.NUMASTRICT,
-          i.MORENUMASTRICT,
-          i.STATISFACTION,
-          i.ISHEAT,
-          i.CONTENTIMGS,
-          i.REPERTORY,
-          <include refid="ProductProperty"></include>
-        FROM bsen_doorentity i
-          LEFT JOIN bsen_doorentity_property j
-            ON i.ID = j.ID
-        WHERE i.id = #{id};
+          i.pid,
+          i.price,
+          i.cuted_price,
+          i.desc,
+          i.soldnum,
+          i.browsenum
+        FROM products i
+        WHERE i.pid = #{id};
     </select>
-    <!--查询商品属性代码片段-->
-    <sql id="ProductProperty">
-        j.PRCCLASS,j.ARTNO,j.BRAND,j.TEXTURE,j.WOOD,j.METAL,j.SWITCHTYPE,j.WORKMANSHIP,j.SPECIALPURPOSE,j.USABLERANGE,
-          j.QUALITYGRADE,j.SAFETYLEVEL,j.COMPRESSIVESTRENGTH,j.WATERTIGHTNESS,j.HARDNESS,j.PENDULUMIMPACT,j.WINDRESISTANCE,
-          j.MOEISB,j.TYS,j.STYLE,j.COLOR,j.PLACEOFORGIN,j.WZCJ,j.WTFT,j.POFT,j.DOORMAXSIZE,j.DOORTHICKNESS,j.WCB
-    </sql>
+
+    <resultMap type="com.nbcb.myron.bsen.module.Product" id="SwipeImgs">
+        <id property="id" column="pid"/>
+        <result property="oldPrice" column="price"/>
+        <result property="newPrice" column="cuted_price"/>
+        <result property="desc" column="desc"/>
+        <result property="soldNum" column="soldnum"/>
+        <result property="browseNum" column="browsenum"/>
+        <collection property="imgUrls" ofType="com.nbcb.myron.bsen.module.ProductImg" column="{bridgeId1=pid}" select="getDetailImg1"></collection>
+        <collection property="detailImgUrls" ofType="com.nbcb.myron.bsen.module.ProductImg" column="{bridgeId2=pid}" select="getDetailImg2"></collection>
+        <collection property="evaluates" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId3=pid}" select="getEvaluates"></collection>
+    </resultMap>
+<!--获取商品详情轮播图-->
+    <select id="getDetailImg1" resultType="com.nbcb.myron.bsen.module.ProductImg">
+      SELECT
+          i.path,
+          i.filename
+        FROM products_files i
+        WHERE i.pid = #{bridgeId1}
+        AND i.classify = '0';
+    </select>
+<!--获取商品详情图-->
+    <select id="getDetailImg2" resultType="com.nbcb.myron.bsen.module.ProductImg">
+      SELECT
+          i.path,
+          i.filename
+        FROM products_files i
+        WHERE i.pid = #{bridgeId2}
+        AND i.classify = '1';
+    </select>
+<!--获取商品详情图-->
+    <select id="getEvaluates" resultType="com.nbcb.myron.bsen.module.User">
+      SELECT
+          i.turn_over turnover,
+          i.evaluate,
+          i.time,
+          j.uid,
+          j.nickname
+        FROM orders i
+        LEFT JOIN users j ON i.user_id = j.uid
+        WHERE i.i_id = #{bridgeId3}
+    </select>
+
+    <!--所有砍价商品-->
+    <select id="getCutProductsList" resultType="com.nbcb.myron.bsen.module.CutProduct">
+      SELECT
+          i.pid            id,
+          i.desc,
+          CONCAT(j.path,j.filename)    imgUrl,
+          i.price          oldPrice,
+          i.cuted_price    newPrice,
+          i.soldnum    soldNum,
+          i.browsenum browseNum
+        FROM products i
+          LEFT JOIN products_files j
+            ON i.pid = j.pid
+        WHERE i.is_cut = '0'
+            AND j.classify = '2'
+    </select>
 
 </mapper>

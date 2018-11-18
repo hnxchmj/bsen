@@ -7,6 +7,8 @@ public class CutProduct{
     private String oldPrice;//原价
     private String newPrice;//砍后价
     private String cutPriceNum;//参与砍价人数
+    private String soldNum;//已售
+    private String browseNum;//已浏览次数
 
     public String getId() {
         return id;
@@ -54,5 +56,21 @@ public class CutProduct{
 
     public void setCutPriceNum(String cutPriceNum) {
         this.cutPriceNum = cutPriceNum;
+    }
+
+    public String getSoldNum() {
+        return soldNum;
+    }
+
+    public void setSoldNum(String soldNum) {
+        this.soldNum = soldNum;
+    }
+
+    public String getBrowseNum() {
+        return browseNum;
+    }
+
+    public void setBrowseNum(String browseNum) {
+        this.browseNum = browseNum;
     }
 }

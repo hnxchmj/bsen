@@ -11,16 +11,14 @@ public interface BsenDaoMapper {
 
     List<ImageEntity> getImageEntityList();
 
-    List<CutProduct> getCutProducts();
+    List<CutProduct> getBestCutProducts();
+
+    List<CutProduct> getCutProductsList();
 
     List<BoutiqueProduct> getBoutiqueProducts();
 
     List<ProductList> getProductLists(String classifyId);
 
-    StoreInfo getStoreInfo();
-
-    BoutiqueProduct getDetail(String id);
-
-    List<ProductEvaluateExt> getEvaluate(String id);
+    Product getDetail(String id);
 
 }
