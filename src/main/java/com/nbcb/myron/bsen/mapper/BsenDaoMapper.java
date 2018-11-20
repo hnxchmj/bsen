@@ -1,13 +1,13 @@
 package com.nbcb.myron.bsen.mapper;
 
 import com.nbcb.myron.bsen.module.*;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BsenDaoMapper {
 
-    DictEntity getHttpAddress(@Param("dicttypeid") String dicttypeid,@Param("dictid") String dictid);
+    DictEntity getHttpAddress(Map<String,Object> params);
 
     List<ImageEntity> getImageEntityList();
 
@@ -17,8 +17,12 @@ public interface BsenDaoMapper {
 
     List<BoutiqueProduct> getBoutiqueProducts();
 
-    List<ProductList> getProductLists(String classifyId);
+    List<ProductListEntity> getProductLists(Map<String,Object> params);
+
+    List<ProductListEntity> getSearchProducts(Map<String,Object> params);
 
     Product getDetail(String id);
+
+    List<Dynamic>  getDynamics(Map<String,Object> params);
 
 }

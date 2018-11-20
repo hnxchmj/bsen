@@ -4,7 +4,7 @@
 <mapper namespace="com.nbcb.myron.bsen.mapper.BsenDaoMapper">
 
 <!--获得http ip-->
-    <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity">
+    <select id="getHttpAddress" parameterType="java.util.HashMap" resultType="com.nbcb.myron.bsen.module.DictEntity">
         select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
     </select>
 
@@ -44,7 +44,7 @@
     </select>
 
 <!--全部分类商品-->
-    <select id="getProductLists" resultType="com.nbcb.myron.bsen.module.ProductList">
+    <select id="getProductLists" parameterType="java.util.HashMap" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
         SELECT
           i.pid            id,
           i.desc,
@@ -55,7 +55,8 @@
           CONCAT(j.path,j.filename)    imgUrl
         FROM products i
         LEFT JOIN products_files j ON i.pid = j.pid
-        WHERE i.classify =#{classifyId} AND j.classify='2';
+        WHERE j.classify='2'
+        <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
     </select>
 
 <!--获取商品详情-->
@@ -128,6 +129,50 @@
             ON i.pid = j.pid
         WHERE i.is_cut = '0'
             AND j.classify = '2'
+    </select>
+
+    <!--搜索商品-->
+    <select id="getSearchProducts" parameterType="java.util.HashMap" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
+        SELECT
+        i.pid            id,
+        i.desc,
+        i.price          oldPrice,
+        i.cuted_price    newPrice,
+        i.soldnum        soldNum,
+        i.browsenum      browseNum,
+        CONCAT(j.path,j.filename)    imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="keyWord != null and keyWord !=''">AND i.desc like concat('%',#{keyWord},'%')</if>
+        GROUP BY i.pid;
+    </select>
+    <!--查询动态-->
+    <select id="getDynamics" parameterType="java.util.HashMap" resultMap="DynamicMap">
+        SELECT
+        i.userid id,
+        i.concent content,
+        i.time releaseTime,
+        j.nickname nickName,
+        CONCAT(j.path,j.filename) headImgUrl
+        FROM
+        users_dynamic i
+        LEFT JOIN users j
+        ON i.userid = j.uid
+        GROUP BY i.userid;
+    </select>
+
+    <resultMap id="DynamicMap" type="com.nbcb.myron.bsen.module.Dynamic">
+        <collection property="contentImgs" ofType="String" column="{bridgeId = id}" select="getContentImgs"/>
+    </resultMap>
+
+    <select id="getContentImgs" resultType="String">
+        SELECT
+        CONCAT(k.path,k.filename) contentImgs
+        FROM
+        products_files k
+        WHERE k.classify ='3'
+        AND k.uid = #{bridgeId};
     </select>
 
 </mapper>

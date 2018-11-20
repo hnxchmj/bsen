@@ -1,6 +1,6 @@
 package com.nbcb.myron.bsen.module;
 
-public class ProductList {
+public class ProductListEntity {
     private String id;
     private String imgUrl;
     private String desc;
