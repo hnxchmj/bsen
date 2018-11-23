@@ -6,11 +6,11 @@ import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.util.*;
 
 @RestController
@@ -214,8 +214,8 @@ public class BsenController {
         return response;
     }
 
-    @GetMapping("dynamics")
-    public JSONObject getDynamics(String page) {
+    @PostMapping("dynamics")
+    public JSONObject getDynamics(@RequestBody Map<String,Object> paramsMap) {
         logger.info("##进入bsen获取动态");
         //获取动态
         Map<String, Object> resultMap = new HashMap<>();
@@ -229,26 +229,26 @@ public class BsenController {
         String httpStr = address.getIp();
 
         //获取商品列表
-        Map<String,Object> sendMap = new HashMap<>();
-        sendMap.put("page",page);
-        List<Dynamic> dynamics = bsenDaoMapper.getDynamics(sendMap);
-        Iterator it = dynamics.iterator();
-        while (it.hasNext()){
-            Dynamic entity = (Dynamic)it.next();
-            String imgPath = httpStr+entity.getHeadImgUrl();
-            entity.setHeadImgUrl(imgPath);
-            List<String> contentImgs = entity.getContentImgs();
-            Iterator<String> ite = contentImgs.iterator();
-            List<String> imgs = new ArrayList<>();
-            while (ite.hasNext()){
-                String imgUrl = ite.next();
-                imgUrl = httpStr + imgUrl;
-                imgs.add(imgUrl);
+        if (!paramsMap.isEmpty()){
+            List<Dynamic> dynamics = bsenDaoMapper.getDynamics(paramsMap);
+            Iterator it = dynamics.iterator();
+            while (it.hasNext()){
+                Dynamic entity = (Dynamic)it.next();
+                String imgPath = httpStr+entity.getHeadImgUrl();
+                entity.setHeadImgUrl(imgPath);
+                List<String> contentImgs = entity.getContentImgs();
+                Iterator<String> ite = contentImgs.iterator();
+                List<String> imgs = new ArrayList<>();
+                while (ite.hasNext()){
+                    String imgUrl = ite.next();
+                    imgUrl = httpStr + imgUrl;
+                    imgs.add(imgUrl);
+                }
+                entity.setContentImgs(imgs);
             }
-            entity.setContentImgs(imgs);
-        }
 
-        data.put("dynamics", dynamics);
+            data.put("dynamics", dynamics);
+        }
 
         //封装返回数据
         resultMap.put("data", data);
@@ -259,11 +259,31 @@ public class BsenController {
         return response;
     }
     @PostMapping("adddynamic")
-    public JSONObject addDynamics(){
+    public JSONObject addDynamics(@RequestParam(value="image") MultipartFile file,HttpServletRequest request) throws Exception{
         logger.info("##进入bsen添加动态##");
-        // todo 添加商铺动态
-        Map<String, Object> resultMap = new HashMap<>();
-        JSONObject data = new JSONObject();
-        return null;
+
+            JSONObject result = new JSONObject();
+
+            System.out.print(file.getOriginalFilename());
+            String filePath = "D:\\MultipartFile\\" +file.getOriginalFilename();
+            file.transferTo(new File(filePath));
+
+            String user = request.getParameter("user");
+            System.out.print(user);
+
+            result.put("code","0000");
+            result.put("msg","success");
+            return result;
     }
+    public static String getFileType(String filename){
+        if(filename.endsWith(".jpg") || filename.endsWith(".jepg")){
+            return ".jpg";
+        }else if(filename.endsWith(".png") || filename.endsWith(".PNG")){
+            return ".png";
+        } else{
+            return "application/octet-stream";
+        }
+    }
+
+
 }

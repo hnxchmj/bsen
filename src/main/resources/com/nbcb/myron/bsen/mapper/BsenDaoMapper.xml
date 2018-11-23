@@ -149,17 +149,20 @@
     </select>
     <!--查询动态-->
     <select id="getDynamics" parameterType="java.util.HashMap" resultMap="DynamicMap">
-        SELECT
+       SELECT
         i.userid id,
         i.concent content,
-        i.time releaseTime,
+        FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') releaseTime,
         j.nickname nickName,
         CONCAT(j.path,j.filename) headImgUrl
         FROM
-        users_dynamic i
+        (
+        SELECT * FROM users_dynamic m ORDER BY m.time DESC
+        ) i
         LEFT JOIN users j
         ON i.userid = j.uid
-        GROUP BY i.userid;
+        ORDER BY i.time DESC
+        LIMIT #{page},#{offset};
     </select>
 
     <resultMap id="DynamicMap" type="com.nbcb.myron.bsen.module.Dynamic">
