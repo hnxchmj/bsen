@@ -4,6 +4,7 @@ import java.util.List;
 
 public class Dynamic {
     private String id;
+    private String uId;
     private String headImgUrl;
     private String nickName;
     private String releaseTime;
@@ -16,6 +17,13 @@ public class Dynamic {
 
     public void setId(String id) {
         this.id = id;
+    }
+    public String getuId() {
+        return uId;
+    }
+
+    public void setuId(String uId) {
+        this.uId = uId;
     }
 
     public String getHeadImgUrl() {

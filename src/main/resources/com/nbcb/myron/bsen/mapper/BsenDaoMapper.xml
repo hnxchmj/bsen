@@ -147,10 +147,12 @@
         <if test="keyWord != null and keyWord !=''">AND i.desc like concat('%',#{keyWord},'%')</if>
         GROUP BY i.pid;
     </select>
+
     <!--查询动态-->
     <select id="getDynamics" parameterType="java.util.HashMap" resultMap="DynamicMap">
        SELECT
-        i.userid id,
+        i.id id,
+        i.userid uId,
         i.concent content,
         FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') releaseTime,
         j.nickname nickName,
@@ -161,7 +163,9 @@
         ) i
         LEFT JOIN users j
         ON i.userid = j.uid
-        ORDER BY i.time DESC
+        LEFT JOIN products_files k
+        ON i.id = k.did
+        GROUP BY i.time DESC
         LIMIT #{page},#{offset};
     </select>
 
@@ -175,7 +179,42 @@
         FROM
         products_files k
         WHERE k.classify ='3'
-        AND k.uid = #{bridgeId};
+        AND k.did = #{bridgeId};
     </select>
+
+    <insert id="addDynamicDesc" parameterType="com.nbcb.myron.bsen.module.UsersDynamic">
+        INSERT INTO bsen_door_dev.users_dynamic
+        (userid,
+        concent,
+        TIME
+        )
+        VALUES
+        (#{userId},
+        #{desc},
+        #{time});
+    </insert>
+
+    <select id="selectDynamicNum" resultType="Integer">
+        SELECT COUNT(*) FROM users_dynamic;
+    </select>
+
+    <insert id="addDynamicImgs" parameterType="com.nbcb.myron.bsen.module.ProductsFiles">
+        INSERT INTO bsen_door_dev.products_files
+        (uid,
+        did,
+        pid,
+        path,
+        filename,
+        classify
+        )
+        VALUES
+        (#{uId},
+        #{dId},
+        #{pId},
+        #{path},
+        #{fileName},
+        #{classify}
+        );
+    </insert>
 
 </mapper>

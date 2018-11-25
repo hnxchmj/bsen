@@ -1,5 +1,6 @@
 package com.nbcb.myron.bsen.controller;
 
+import com.nbcb.myron.bsen.utils.Utils;
 import com.nbcb.myron.bsen.mapper.BsenDaoMapper;
 import com.nbcb.myron.bsen.module.*;
 import net.sf.json.JSONObject;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -261,29 +263,47 @@ public class BsenController {
     @PostMapping("adddynamic")
     public JSONObject addDynamics(@RequestParam(value="image") MultipartFile file,HttpServletRequest request) throws Exception{
         logger.info("##进入bsen添加动态##");
-
-            JSONObject result = new JSONObject();
-
-            System.out.print(file.getOriginalFilename());
-            String filePath = "D:\\MultipartFile\\" +file.getOriginalFilename();
-            file.transferTo(new File(filePath));
-
-            String user = request.getParameter("user");
-            System.out.print(user);
-
-            result.put("code","0000");
-            result.put("msg","success");
-            return result;
-    }
-    public static String getFileType(String filename){
-        if(filename.endsWith(".jpg") || filename.endsWith(".jepg")){
-            return ".jpg";
-        }else if(filename.endsWith(".png") || filename.endsWith(".PNG")){
-            return ".png";
-        } else{
-            return "application/octet-stream";
+        JSONObject result=null;
+        Integer oneDesc=null;
+        Integer dynamicNum=null;
+        String leaveAMessage = request.getParameter("leaveAMessage");
+        if (leaveAMessage != null){
+            //存文字
+            Map<String,Object> sendDesc = new HashMap<>();
+            sendDesc.put("userId","00001");
+            sendDesc.put("desc",leaveAMessage);
+            sendDesc.put("time",""+new Date().getTime());
+            //向数据库添加动态描述
+            oneDesc = bsenDaoMapper.addDynamicDesc(sendDesc);
         }
+        //存图片
+        JSONObject map = Utils.saveFile(file);
+
+        //封装添加的动态的Id
+        dynamicNum = bsenDaoMapper.selectDynamicNum();
+        JSONObject data = (JSONObject)map.get("data");
+        data.put("did",""+dynamicNum);
+        Map<String,Object> sendImgs = Utils.getMap(map);
+        result =add(sendImgs);
+        logger.info("##response: " + result.toString());
+        return result;
     }
 
-
+    private JSONObject add(Map<String,Object> sendImgs){
+        JSONObject result = new JSONObject();
+        if (sendImgs != null){
+            Integer oneImg = bsenDaoMapper.addDynamicImgs(sendImgs);
+            if (oneImg==1){
+                result.put("code","0000");
+                result.put("msg","图片保存成功");
+            }else{
+                result.put("code","0002");
+                result.put("msg","图片保存失败");
+            }
+        }else{
+            result.put("code","0001");
+            result.put("msg","图片上传失败");
+        }
+        return result;
+    }
 }

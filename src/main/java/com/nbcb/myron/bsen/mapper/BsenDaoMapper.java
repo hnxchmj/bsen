@@ -25,4 +25,10 @@ public interface BsenDaoMapper {
 
     List<Dynamic>  getDynamics(Map<String,Object> params);
 
+    Integer  addDynamicDesc(Map<String,Object> params);
+
+    Integer  selectDynamicNum();
+
+    Integer  addDynamicImgs(Map<String,Object> params);
+
 }
