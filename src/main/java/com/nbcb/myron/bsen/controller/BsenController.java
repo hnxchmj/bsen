@@ -260,26 +260,41 @@ public class BsenController {
         logger.info("##response: " + response.toString());
         return response;
     }
-    @PostMapping("adddynamic")
-    public JSONObject addDynamics(@RequestParam(value="image") MultipartFile file,HttpServletRequest request) throws Exception{
-        logger.info("##进入bsen添加动态##");
-        JSONObject result=null;
-        Integer oneDesc=null;
-        Integer dynamicNum=null;
-        String leaveAMessage = request.getParameter("leaveAMessage");
-        if (leaveAMessage != null){
-            //存文字
+    @PostMapping("adddynamicdesc")
+    public JSONObject adddynamicdesc(@RequestBody Map<String,Object> paramsMap){
+        logger.info("##进入bsen添加动态内容##desc: "+paramsMap);
+        JSONObject result = new JSONObject();
+        String leaveAMessage = (String)paramsMap.get("desc");
+        if (leaveAMessage != null && leaveAMessage !=""){
             Map<String,Object> sendDesc = new HashMap<>();
             sendDesc.put("userId","00001");
             sendDesc.put("desc",leaveAMessage);
             sendDesc.put("time",""+new Date().getTime());
             //向数据库添加动态描述
-            oneDesc = bsenDaoMapper.addDynamicDesc(sendDesc);
+            Integer oneDesc = bsenDaoMapper.addDynamicDesc(sendDesc);
+            if (oneDesc == 1){
+                result.put("code","0000");
+                result.put("msg","保存成功");
+            }else{
+                result.put("code","0001");
+                result.put("msg","保存失败");
+            }
+        }else{
+            result.put("code","0001");
+            result.put("msg","保存失败");
         }
+        logger.info("##response: " + result.toString());
+        return result;
+    }
+    @PostMapping("adddynamicimg")
+    public JSONObject adddynamicimg(@RequestParam(value="image") MultipartFile file) throws Exception{
+        logger.info("##进入bsen添加动态的图片附件##");
+        JSONObject result=null;
+        Integer dynamicNum=null;
         //存图片
         JSONObject map = Utils.saveFile(file);
 
-        //封装添加的动态的Id
+        //添加新增动态的Id
         dynamicNum = bsenDaoMapper.selectDynamicNum();
         JSONObject data = (JSONObject)map.get("data");
         data.put("did",""+dynamicNum);
