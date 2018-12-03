@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.nbcb.myron.bsen.mapper.BsenDaoMapper">
+<mapper namespace="com.nbcb.myron.bsen.dao.BsenDao">
 
 <!--获得http ip-->
-    <select id="getHttpAddress" parameterType="java.util.HashMap" resultType="com.nbcb.myron.bsen.module.DictEntity">
+    <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity">
         select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
     </select>
 
@@ -44,7 +44,7 @@
     </select>
 
 <!--全部分类商品-->
-    <select id="getProductLists" parameterType="java.util.HashMap" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
+    <select id="getProductLists" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
         SELECT
           i.pid            id,
           i.desc,
@@ -132,7 +132,7 @@
     </select>
 
     <!--搜索商品-->
-    <select id="getSearchProducts" parameterType="java.util.HashMap" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
+    <select id="getSearchProducts" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
         SELECT
         i.pid            id,
         i.desc,
@@ -149,17 +149,19 @@
     </select>
 
     <!--查询动态-->
-    <select id="getDynamics" parameterType="java.util.HashMap" resultMap="DynamicMap">
+    <select id="getDynamics" resultMap="DynamicMap">
        SELECT
         i.id id,
         i.userid uId,
         i.concent content,
+        i.likenum likeNum,
+        i.browsenum browseNum,
         FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') releaseTime,
         j.nickname nickName,
         CONCAT(j.path,j.filename) headImgUrl
         FROM
         (
-        SELECT * FROM users_dynamic m ORDER BY m.time DESC
+        SELECT * FROM users_dynamic m WHERE m.userid='oM78247bYUgo2bsq8ZUEAf_d-GLM'  ORDER BY m.time DESC
         ) i
         LEFT JOIN users j
         ON i.userid = j.uid
@@ -171,6 +173,7 @@
 
     <resultMap id="DynamicMap" type="com.nbcb.myron.bsen.module.Dynamic">
         <collection property="contentImgs" ofType="String" column="{bridgeId = id}" select="getContentImgs"/>
+        <collection property="dynamicComments" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId1 = id}" select="getDynamicComments"/>
     </resultMap>
 
     <select id="getContentImgs" resultType="String">
@@ -180,6 +183,17 @@
         products_files k
         WHERE k.classify ='3'
         AND k.did = #{bridgeId};
+    </select>
+
+    <select id="getDynamicComments" resultType="com.nbcb.myron.bsen.module.User">
+        SELECT
+          j.uid uId,
+          j.nickname nickName,
+          i.content evaluate
+        FROM users_dynamics_comments i
+          LEFT JOIN users j
+            ON i.userid = j.uid
+        WHERE i.did = #{bridgeId1};
     </select>
 
     <insert id="addDynamicDesc" parameterType="com.nbcb.myron.bsen.module.UsersDynamic">
@@ -216,5 +230,127 @@
         #{classify}
         );
     </insert>
+
+    <!--查询动态详情-->
+    <select id="dynamicDetail" resultMap="Product">
+      SELECT
+        i.id id,
+        i.userid uId,
+        i.concent content,
+        i.likenum likeNum,
+        i.browsenum browseNum,
+        FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') releaseTime,
+        j.nickname nickName,
+        CONCAT(j.path,j.filename) headImgUrl
+        FROM
+        (
+        SELECT * FROM users_dynamic m ORDER BY m.time DESC
+        ) i
+        LEFT JOIN users j
+        ON i.userid = j.uid
+        LEFT JOIN products_files k
+        ON i.id = k.did
+        WHERE i.id=#{id}
+        GROUP BY i.time
+    </select>
+
+    <resultMap id="Product" type="com.nbcb.myron.bsen.module.Dynamic">
+        <collection property="contentImgs" ofType="String" column="{bridgeId = id}" select="getContentImgs"/>
+        <collection property="dynamicComments" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId1 = id}" select="getDynamicComments"/>
+    </resultMap>
+
+    <update id="updataDynamicsBrowseNum">
+        UPDATE users_dynamic i
+        SET i.browsenum = i.browsenum + 1
+        <if test="id != null and id !=''">where i.id =#{id}</if>
+    </update>
+
+    <select id="selectUser" resultType="com.nbcb.myron.bsen.module.User">
+        select uid from users where uid = #{uId}
+    </select>
+
+    <insert id="insertNewUser">
+        INSERT INTO bsen_door_dev.users
+                    (uid,
+                     session_key)
+        VALUES (#{uId},
+                #{session_key})
+    </insert>
+
+    <update id="updatePlus">
+        UPDATE users_dynamic i
+        SET i.likenum = i.likenum + 1
+        <if test="id != null and id !=''">where i.id =#{id}</if>
+    </update>
+
+    <update id="updateMinus">
+        UPDATE users_dynamic i
+        SET i.likenum = i.likenum - 1
+        where i.id =#{id}
+    </update>
+
+    <insert id="insertComment">
+        INSERT INTO users_dynamics_comments
+            (did,
+             userid,
+             content)
+        VALUES (#{id},
+        #{userId},
+        #{comment})
+    </insert>
+
+    <select id="selectUserComment" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM users_dynamics_comments i WHERE i.userid=#{userId} AND i.did=#{id};
+    </select>
+
+    <insert id="addProduct">
+        INSERT INTO orders
+            (user_id,
+             i_id,
+             STATUS,
+             turn_over,
+             price,
+             TIME)
+        VALUES (#{userId},
+                #{id},
+                #{status},
+                #{turnOver},
+                #{price},
+                #{time});
+    </insert>
+
+    <select id="selectCartProductsCounts" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM orders i WHERE i.status='0';
+    </select>
+
+    <select id="selectCartProducts" resultType="com.nbcb.myron.bsen.module.OrderInfo">
+        SELECT
+          i.turn_over turnOver,
+          i.price,
+          concat(k.path,k.filename) imgUrl
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+        WHERE i.i_id = #{id}
+          AND k.classify = '2'
+          AND i.status = '0'
+           GROUP BY i.i_id
+    </select>
+    <select id="selectCartProductList" resultType="com.nbcb.myron.bsen.module.OrderInfo">
+        SELECT
+          i.turn_over    turnOver,
+          i.price,
+          CONCAT(k.path,k.filename)    imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+            AND k.classify = '2'
+            AND i.status = '0'
+
+    </select>
 
 </mapper>

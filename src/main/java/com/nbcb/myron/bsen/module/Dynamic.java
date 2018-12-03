@@ -10,6 +10,9 @@ public class Dynamic {
     private String releaseTime;
     private String content;
     private List<String> contentImgs;
+    private Integer likeNum;
+    private Integer browseNum;
+    private List<User> dynamicComments;
 
     public String getId() {
         return id;
@@ -64,5 +67,29 @@ public class Dynamic {
 
     public void setContentImgs(List<String> contentImgs) {
         this.contentImgs = contentImgs;
+    }
+
+    public Integer getLikeNum() {
+        return likeNum;
+    }
+
+    public void setLikeNum(Integer likeNum) {
+        this.likeNum = likeNum;
+    }
+
+    public Integer getBrowseNum() {
+        return browseNum;
+    }
+
+    public void setBrowseNum(Integer browseNum) {
+        this.browseNum = browseNum;
+    }
+
+    public List<User> getDynamicComments() {
+        return dynamicComments;
+    }
+
+    public void setDynamicComments(List<User> dynamicComments) {
+        this.dynamicComments = dynamicComments;
     }
 }

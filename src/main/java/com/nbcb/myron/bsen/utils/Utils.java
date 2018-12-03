@@ -20,7 +20,7 @@ public class Utils {
         Map<String,Object> sendMap = new HashMap<>();
         if (jsonObj.get("code")=="0000"){
             JSONObject data = (JSONObject)jsonObj.get("data");
-            sendMap.put("uId","00001");
+            sendMap.put("uId","oM78247bYUgo2bsq8ZUEAf_d-GLM");
             sendMap.put("dId",data.get("did"));
             sendMap.put("pId"," ");
             sendMap.put("path",data.get("path"));
@@ -36,7 +36,7 @@ public class Utils {
         String month=new SimpleDateFormat("yyyyMM").format(date);
         String day=new SimpleDateFormat("yyyyMMdd").format(date);
         //文件存放路径
-        String imageFilePath =File.separator+"home"+File.separator+"dynamicimgs"+ File.separator+month+ File.separator+"00001"+ File.separator+day+ File.separator;
+        String imageFilePath =File.separator+"home"+File.separator+"dynamicimgs"+ File.separator+month+File.separator+day+ File.separator;
 
         String imageName=file.getOriginalFilename();//生成文件名
 
