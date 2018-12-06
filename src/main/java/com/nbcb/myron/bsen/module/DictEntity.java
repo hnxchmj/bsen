@@ -1,7 +1,12 @@
 package com.nbcb.myron.bsen.module;
 
-public class DictEntity {
-    String ip;
+import java.io.Serializable;
+
+public class DictEntity implements Serializable {
+
+    private static final long serialVersionUID = -907788219768168525L;
+
+    private String ip;
 
     public String getIp() {
         return ip;

@@ -1,12 +1,15 @@
 package com.nbcb.myron.bsen.utils;
 
-import net.sf.json.JSONObject;
+import com.alibaba.fastjson.JSONObject;
+import com.nbcb.myron.bsen.module.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,6 +18,8 @@ import java.util.Map;
 public class Utils {
 
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+
+    private static String wxSessionkey = "F3UENUg3JcI31O2RpoBQ9n8J77Tf1LgZUyGyzdjm7Q4rRKT052DPLdA3NqHeajF6cITOX54rQ2yoFxE83g3eHWjEH7CB9m2FvdoljuTXZLrJy6U2Ba2EbUlF6xazawRaK9Aq";
 
     public static Map<String,Object> getMap(JSONObject jsonObj){
         Map<String,Object> sendMap = new HashMap<>();
@@ -69,5 +74,46 @@ public class Utils {
         map.put("data",data);
 
         return map;
+    }
+
+
+    /*
+    *微信用户校验
+     */
+    public static void putSession(User u) {
+//        BeanManager.getSpyMemcachedClient().set(wxSessionkey,  3*24*3600,u.getOpenid()+","+u.getSession_key());//设置memcache缓存
+    }
+
+
+    /**
+     * 得到3rd_session登录效验(key)
+     * @return
+     */
+    public static String get3rdSession(){
+        return exec("head -n 80 /dev/urandom | tr -dc A-Za-z0-9 | head -c 168");
+    }
+
+
+    /**
+     * linux中执行命令
+     * @param cmd
+     * @return
+     */
+    private static String exec(String cmd) {
+        StringBuffer sb = new StringBuffer();
+        try {
+            String[] cmdA = { "/bin/sh", "-c", cmd };
+            Process process = Runtime.getRuntime().exec(cmdA);
+            LineNumberReader br = new LineNumberReader(new InputStreamReader(
+                    process.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        } catch (Exception e) {
+            //如果本地测试，会报空指针异常，所以为了不让报错，索性返回有值即可
+            sb.append(wxSessionkey);
+        }
+        return sb.toString();
     }
 }

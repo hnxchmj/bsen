@@ -1,8 +1,14 @@
 package com.nbcb.myron.bsen.module;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Product {
+/**
+ * 产品类
+ */
+public class Product implements Serializable {
+
+    private static final long serialVersionUID = -1808750462342354396L;
     private String id;//商品id
     private List<ProductImg> imgUrls;//轮播图集合
     private String oldPrice;//原价

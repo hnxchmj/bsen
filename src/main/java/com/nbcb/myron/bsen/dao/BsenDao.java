@@ -9,6 +9,8 @@ import java.util.Map;
 @Repository
 public interface BsenDao {
 
+    Integer  insertNewUser(Map<String,Object> params);
+
     DictEntity getHttpAddress(Map<String,Object> params);
 
     List<ImageEntity> getImageEntityList();
@@ -23,7 +25,7 @@ public interface BsenDao {
 
     List<ProductListEntity> getSearchProducts(Map<String,Object> params);
 
-    Product getDetail(String id);
+    Product getDetail(Map<String,Object> paramsMap);
 
     List<Dynamic>  getDynamics(Map<String,Object> params);
 
@@ -39,8 +41,6 @@ public interface BsenDao {
 
     User  selectUser(Map<String,Object> params);
 
-    Integer  insertNewUser(Map<String,Object> params);
-
     Integer  updatePlus(Map<String,Object> params);
 
     Integer  updateMinus(Map<String,Object> params);
@@ -49,13 +49,15 @@ public interface BsenDao {
 
     Integer  selectUserComment(Map<String,Object> params);
 
-    Integer  addProduct(Map<String,Object> params);
+    void addProduct(Order order);
 
-    Integer  selectCartProductsCounts();
+    Integer  selectCartProductsCounts(Map<String,Object> params);
 
     OrderInfo  selectCartProducts(Map<String,Object> params);
 
     List<OrderInfo>  selectCartProductList(Map<String,Object> params);
+
+    Integer  updateProductNum(Map<String,Object> params);
 
 
 }

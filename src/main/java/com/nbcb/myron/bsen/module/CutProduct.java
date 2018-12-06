@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class CutProduct{
+import java.io.Serializable;
+
+public class CutProduct implements Serializable {
+    private static final long serialVersionUID = -1593809382259716409L;
     private String id;//id
     private String desc;//产品描述
     private String imgUrl;//缩略图

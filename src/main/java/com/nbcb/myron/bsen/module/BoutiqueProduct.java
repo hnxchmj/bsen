@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class BoutiqueProduct {
+import java.io.Serializable;
+
+public class BoutiqueProduct implements Serializable {
+    private static final long serialVersionUID = 5514069750842835721L;
     private String id;
     private String imgUrl;
     private String desc;

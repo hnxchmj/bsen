@@ -1,15 +1,15 @@
 package com.nbcb.myron.bsen.service.serviceImpl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.nbcb.myron.bsen.common.MD5;
 import com.nbcb.myron.bsen.dao.BsenDao;
 import com.nbcb.myron.bsen.module.*;
 import com.nbcb.myron.bsen.service.BsenService;
 import com.nbcb.myron.bsen.utils.HttpRequest;
 import com.nbcb.myron.bsen.utils.Utils;
-import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +26,54 @@ public class BsenServiceImpl implements BsenService {
 
     public void setHttpStr(String httpStr) {
         this.httpStr = httpStr;
+    }
+
+    @Override
+    public JSONObject login(Map<String, Object> paramsMap) {
+
+        //向微信接口校验
+        String code = (String) paramsMap.get("code");
+//        String appid = (String) paramsMap.get("appid");
+        String appid = "wxb9c55e43b5fa55bd";
+//        String secret = (String) paramsMap.get("secret");
+        String secret = "94c6ef40162c76ebf8a9ca13b8548866";//存入数据库
+        String url = "https://api.weixin.qq.com/sns/jscode2session";
+        String params ="appid=" +appid+"&secret=" +secret+"&js_code="+code+"&grant_type=authorization_code";
+        String result = HttpRequest.sendGet(url,params);
+        JSONObject data = JSONObject.parseObject(result);
+        //对用户session_key 进行加密处理
+        JSONObject acceptParams = new JSONObject();
+        String token = Utils.get3rdSession();//明文
+        String text= (String)data.get("session_key");//密钥key
+        String md5KeyText =null;
+        try {
+            md5KeyText = MD5.md5(text,token);
+        }catch (Exception e){
+            logger.info("MD5加密异常",e);
+        }
+        acceptParams.put("uId",data.get("openid"));
+        //查询数据库是否有该用户
+        User user = bsenDao.selectUser(acceptParams);
+
+        JSONObject response = new JSONObject();
+        if (user == null){
+            acceptParams.put("session_key",text);
+            acceptParams.put("bsen_session_key",md5KeyText);
+            Integer isNum = bsenDao.insertNewUser(acceptParams);
+            if (isNum == 1){
+                response.put("data", acceptParams);
+                response.put("code", "0000");
+                response.put("msg", "添加用户openId成功");
+            }else{
+                response.put("code", "0001");
+                response.put("msg", "添加用户openId失败");
+            }
+        }else{
+            response.put("data", acceptParams);
+            response.put("code", "0000");
+            response.put("msg", "用户openId已存在");
+        }
+        return response;
     }
 
     @Override
@@ -60,7 +108,6 @@ public class BsenServiceImpl implements BsenService {
             entity.setImgUrl(imgPath);
         }
         data.put("boutiqueProducts", boutiqueProducts);
-
         return data;
     }
 
@@ -84,12 +131,12 @@ public class BsenServiceImpl implements BsenService {
     }
 
     @Override
-    public JSONObject getDetailData(String id) {
+    public JSONObject getDetailData(Map<String,Object> paramsMap) {
         //获取http协议地址
         getHttpAddress();
         //获取详情页数据
         JSONObject data = new JSONObject();
-        Product product = bsenDao.getDetail(id);
+        Product product = bsenDao.getDetail(paramsMap);
         //获取轮播图
         List<ProductImg> imgUrls = product.getImgUrls();
         Iterator<ProductImg> it = imgUrls.iterator();
@@ -108,7 +155,7 @@ public class BsenServiceImpl implements BsenService {
         }
         data.put("productInfo", product);
         //查询当前客户购物车的所有商品数量
-        Integer totalCartNum = bsenDao.selectCartProductsCounts();
+        Integer totalCartNum = bsenDao.selectCartProductsCounts(paramsMap);
         data.put("counts",totalCartNum);
         return data;
     }
@@ -190,42 +237,6 @@ public class BsenServiceImpl implements BsenService {
     }
 
     @Override
-    public JSONObject login(Map<String, Object> paramsMap) {
-
-        //向微信接口校验
-        String code = (String) paramsMap.get("code");
-        String url = "https://api.weixin.qq.com/sns/jscode2session";
-        String params ="appid=wxb9c55e43b5fa55bd" +
-                "&secret=94c6ef40162c76ebf8a9ca13b8548866" +
-                "&js_code="+code+"&grant_type=authorization_code";
-        String result = HttpRequest.sendGet(url,params);
-        JSONObject data = JSONObject.fromObject(result);
-        //查询数据库是否有该用户
-        JSONObject acceptParams = new JSONObject();
-        acceptParams.put("uId",data.get("openid"));
-        acceptParams.put("session_key",data.get("session_key"));
-        User user = bsenDao.selectUser(acceptParams);
-
-        JSONObject response = new JSONObject();
-        if (user == null){
-            Integer isNum = bsenDao.insertNewUser(acceptParams);
-            if (isNum == 1){
-                response.put("data", acceptParams);
-                response.put("code", "0000");
-                response.put("msg", "添加用户成功");
-            }else{
-                response.put("code", "0001");
-                response.put("msg", "添加用户失败");
-            }
-        }else{
-            response.put("data", acceptParams);
-            response.put("code", "0000");
-            response.put("msg", "用户已存在");
-        }
-        return response;
-    }
-
-    @Override
     public JSONObject updateDz(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
         boolean isTrue = (boolean)paramsMap.get("isTrue");
@@ -273,14 +284,21 @@ public class BsenServiceImpl implements BsenService {
     public JSONObject addShoppingCart(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
 
-        paramsMap.put("status",0);
-        paramsMap.put("time",new Date().getTime());
-        Integer one = bsenDao.addProduct(paramsMap);
+        paramsMap.put("time",""+new Date().getTime());
+        Order order = new Order();
+        order.setPid((String)paramsMap.get("id"));
+        order.setTurnOver((String)paramsMap.get("turnOver"));
+        order.setPrice((String)paramsMap.get("price"));
+        order.setStatus((Integer)paramsMap.get("status"));
+        order.setUserId((String)paramsMap.get("userId"));
+        order.setTime((String)paramsMap.get("time"));
+        bsenDao.addProduct(order);
         //查询当前客户购物车的所有商品数量
-        Integer totalCartNum = bsenDao.selectCartProductsCounts();
+        Integer totalCartNum = bsenDao.selectCartProductsCounts(paramsMap);
         JSONObject data = new JSONObject();
         data.put("counts",totalCartNum);
-        if (one == 1){
+        data.put("id",order.getId());
+        if (order.getId() > 0 ){
             response.put("data",data);
             response.put("code","0000");
             response.put("msg","添加成功");
@@ -297,21 +315,17 @@ public class BsenServiceImpl implements BsenService {
         JSONObject data = new JSONObject();
         //获取http协议地址
         getHttpAddress();
-        //获取动态详情
-        OrderInfo orderInfo=null;
+        //获取订单详情
         if (!paramsMap.isEmpty()){
-            orderInfo=bsenDao.selectCartProducts(paramsMap);
-            String imgPath = httpStr+orderInfo.getImgUrl();
-            orderInfo.setImgUrl(imgPath);
-            data.put("orderInfo",orderInfo);
-        }
-        if (orderInfo!=null){
+            OrderInfo orderInfo = bsenDao.selectCartProducts(paramsMap);
+            if (orderInfo!=null){
+                String imgPath = httpStr+orderInfo.getImgUrl();
+                orderInfo.setImgUrl(imgPath);
+                data.put("orderInfo",orderInfo);
+            }
             response.put("data",data);
             response.put("code","0000");
             response.put("msg","获取订单成功");
-        }else{
-            response.put("code","0001");
-            response.put("msg","获取订单失败");
         }
         return response;
     }
@@ -341,6 +355,20 @@ public class BsenServiceImpl implements BsenService {
         }else{
             response.put("code","0001");
             response.put("msg","查询失败");
+        }
+        return response;
+    }
+
+    @Override
+    public JSONObject updateShoppingCartproNum(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        Integer one = bsenDao.updateProductNum(paramsMap);
+        if (one == 1){
+            response.put("code","0000");
+            response.put("msg","更新成功");
+        }else{
+            response.put("code","0001");
+            response.put("msg","更新失败");
         }
         return response;
     }

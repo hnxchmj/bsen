@@ -7,6 +7,7 @@ public class User {
     private String evaluate;
     private String turnOver;
     private String time;
+    private String session_key;
 
     public String getuId() {
         return uId;
@@ -54,5 +55,13 @@ public class User {
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    public String getSession_key() {
+        return session_key;
+    }
+
+    public void setSession_key(String session_key) {
+        this.session_key = session_key;
     }
 }

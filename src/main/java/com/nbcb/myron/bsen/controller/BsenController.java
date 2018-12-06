@@ -1,7 +1,7 @@
 package com.nbcb.myron.bsen.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.service.BsenService;
-import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +18,15 @@ public class BsenController {
 
     @Autowired
     private BsenService bsenService;
+
+
+    @PostMapping("login")
+    public JSONObject login(@RequestBody Map<String,Object> paramsMap) {
+        logger.info("##登录校验"+paramsMap);
+        JSONObject response = bsenService.login(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
 
     @GetMapping("indexdata")
     public JSONObject getIndexData() {
@@ -45,11 +54,11 @@ public class BsenController {
         return response;
     }
 
-    @GetMapping("detail")
-    public JSONObject getDetailData(String id ) {
-        logger.info("##进入bsen获取详情页数据##id: "+id);
+    @PostMapping("detail")
+    public JSONObject getDetailData(@RequestBody Map<String,Object> paramsMap ) {
+        logger.info("##进入bsen获取详情页数据##paramsMap: "+paramsMap);
         JSONObject response = new JSONObject();
-        JSONObject data = bsenService.getDetailData(id);
+        JSONObject data = bsenService.getDetailData(paramsMap);
         response.put("data", data);
         response.put("code", "0000");
         response.put("msg", "success");
@@ -119,13 +128,6 @@ public class BsenController {
         logger.info("##response: " + response);
         return response;
     }
-    @PostMapping("login")
-    public JSONObject login(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##登录校验"+paramsMap);
-        JSONObject response = bsenService.login(paramsMap);
-        logger.info("##response: " + response);
-        return response;
-    }
 
     @PostMapping("updatedz")
     public JSONObject updateDz(@RequestBody Map<String,Object> paramsMap) {
@@ -144,7 +146,7 @@ public class BsenController {
     }
     @PostMapping("addshoppingcart")
     public JSONObject addShoppingCart(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##添加购物车"+paramsMap);
+        logger.info("##添加商品到购物车"+paramsMap);
         JSONObject response = bsenService.addShoppingCart(paramsMap);
         logger.info("##response: " + response);
         return response;
@@ -160,6 +162,13 @@ public class BsenController {
     public JSONObject getShoppingCartList(@RequestBody Map<String,Object> paramsMap) {
         logger.info("##获取购物车商品列表"+paramsMap);
         JSONObject response = bsenService.getShoppingCartList(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+    @PostMapping("updateshoppingcartpronum")
+    public JSONObject updateShoppingCartproNum(@RequestBody Map<String,Object> paramsMap) {
+        logger.info("##更新购物车商品数量"+paramsMap);
+        JSONObject response = bsenService.updateShoppingCartproNum(paramsMap);
         logger.info("##response: " + response);
         return response;
     }

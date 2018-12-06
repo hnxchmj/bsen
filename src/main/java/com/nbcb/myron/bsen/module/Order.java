@@ -1,12 +1,13 @@
 package com.nbcb.myron.bsen.module;
 
-public class OrderInfo {
+public class Order {
     private Integer id;
-    private String pid;
-    private String turnOver;
-    private String price;
-    private String imgUrl;
-    private String desc;
+    private String  userId;
+    private String  pid;
+    private Integer  status;
+    private String  turnOver;
+    private String  price;
+    private String  time;
 
     public Integer getId() {
         return id;
@@ -16,12 +17,28 @@ public class OrderInfo {
         this.id = id;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     public String getPid() {
         return pid;
     }
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 
     public String getTurnOver() {
@@ -40,19 +57,11 @@ public class OrderInfo {
         this.price = price;
     }
 
-    public String getImgUrl() {
-        return imgUrl;
+    public String getTime() {
+        return time;
     }
 
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public void setTime(String time) {
+        this.time = time;
     }
 }

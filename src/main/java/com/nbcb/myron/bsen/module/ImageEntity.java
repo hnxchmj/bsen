@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class ImageEntity {
+import java.io.Serializable;
+
+public class ImageEntity implements Serializable {
+    private static final long serialVersionUID = -1928290395794054528L;
     private String id;
     private String imgPath;
     private String imgName;

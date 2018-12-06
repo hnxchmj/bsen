@@ -3,6 +3,8 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nbcb.myron.bsen.dao.BsenDao">
 
+    <!--开启二级缓存-->
+    <cache type="com.nbcb.myron.bsen.common.RedisCache"></cache>
 <!--获得http ip-->
     <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity">
         select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
@@ -259,7 +261,7 @@
         <collection property="dynamicComments" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId1 = id}" select="getDynamicComments"/>
     </resultMap>
 
-    <update id="updataDynamicsBrowseNum">
+    <update id="updataDynamicsBrowseNum" flushCache="true">
         UPDATE users_dynamic i
         SET i.browsenum = i.browsenum + 1
         <if test="id != null and id !=''">where i.id =#{id}</if>
@@ -271,19 +273,19 @@
 
     <insert id="insertNewUser">
         INSERT INTO bsen_door_dev.users
-                    (uid,
-                     session_key)
-        VALUES (#{uId},
-                #{session_key})
+                    (uid,session_key,
+                     bsen_session_key)
+        VALUES (#{uId},#{session_key},
+                #{bsen_session_key})
     </insert>
 
-    <update id="updatePlus">
+    <update id="updatePlus" flushCache="true">
         UPDATE users_dynamic i
         SET i.likenum = i.likenum + 1
         <if test="id != null and id !=''">where i.id =#{id}</if>
     </update>
 
-    <update id="updateMinus">
+    <update id="updateMinus" flushCache="true">
         UPDATE users_dynamic i
         SET i.likenum = i.likenum - 1
         where i.id =#{id}
@@ -303,7 +305,10 @@
         SELECT COUNT(*) FROM users_dynamics_comments i WHERE i.userid=#{userId} AND i.did=#{id};
     </select>
 
-    <insert id="addProduct">
+    <insert id="addProduct" parameterType="com.nbcb.myron.bsen.module.Order">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID();
+        </selectKey>
         INSERT INTO orders
             (user_id,
              i_id,
@@ -312,7 +317,7 @@
              price,
              TIME)
         VALUES (#{userId},
-                #{id},
+                #{pid},
                 #{status},
                 #{turnOver},
                 #{price},
@@ -320,24 +325,33 @@
     </insert>
 
     <select id="selectCartProductsCounts" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM orders i WHERE i.status='0';
+        SELECT COUNT(*) FROM orders i WHERE i.status='0' AND i.user_id=#{userId} ;
     </select>
 
     <select id="selectCartProducts" resultType="com.nbcb.myron.bsen.module.OrderInfo">
         SELECT
+          i.id id,
+          i.i_id pid,
           i.turn_over turnOver,
           i.price,
-          concat(k.path,k.filename) imgUrl
+          concat(k.path,k.filename) imgUrl,
+          j.desc
         FROM orders i
           LEFT JOIN products_files k
             ON i.i_id = k.pid
-        WHERE i.i_id = #{id}
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+          AND i.id = #{id}
+          AND i.i_id = #{pid}
           AND k.classify = '2'
-          AND i.status = '0'
+          AND i.status = #{status}
            GROUP BY i.i_id
     </select>
     <select id="selectCartProductList" resultType="com.nbcb.myron.bsen.module.OrderInfo">
         SELECT
+          i.id id,
+          i.i_id pid,
           i.turn_over    turnOver,
           i.price,
           CONCAT(k.path,k.filename)    imgUrl,
@@ -348,9 +362,17 @@
           LEFT JOIN products j
             ON k.pid = j.pid
         WHERE i.user_id = #{userId}
+            AND i.status = #{status}
             AND k.classify = '2'
             AND i.status = '0'
 
     </select>
+
+    <update id="updateProductNum" flushCache="true">
+        UPDATE orders
+        SET turn_over = #{turnOver}
+        WHERE user_id = #{userId}
+            AND id = #{id}
+    </update>
 
 </mapper>
