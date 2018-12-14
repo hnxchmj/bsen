@@ -1,4 +1,4 @@
-package com.nbcb.myron.bsen.utils;
+package com.nbcb.myron.bsen.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;

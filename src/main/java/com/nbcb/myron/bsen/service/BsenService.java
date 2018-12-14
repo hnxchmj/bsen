@@ -7,11 +7,11 @@ import java.util.Map;
 
 public interface BsenService {
 
-    public JSONObject login(Map<String,Object> paramsMap);
+    public JSONObject register(Map<String,Object> paramsMap);
 
     public JSONObject getIndexData();
 
-    public JSONObject getProductLists(String classifyId);
+    public JSONObject getProductLists(Map<String,Object> params);
 
     public JSONObject getDetailData(Map<String,Object> params);
 
@@ -38,4 +38,6 @@ public interface BsenService {
     public JSONObject getShoppingCartList(Map<String,Object> paramsMap);
 
     public JSONObject updateShoppingCartproNum(Map<String,Object> paramsMap);
+
+    public JSONObject myinfo(Map<String,Object> paramsMap);
 }

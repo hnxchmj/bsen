@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class UsersDynamic {
+import java.io.Serializable;
+
+public class UsersDynamic implements Serializable {
+    private static final long serialVersionUID = -6803251581121868018L;
     private Integer id;
     private String userId;
     private String content;

@@ -20,10 +20,10 @@ public class BsenController {
     private BsenService bsenService;
 
 
-    @PostMapping("login")
-    public JSONObject login(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##登录校验"+paramsMap);
-        JSONObject response = bsenService.login(paramsMap);
+    @PostMapping("register")
+    public JSONObject register(@RequestBody Map<String,Object> paramsMap) {
+        logger.info("##用户注册"+paramsMap);
+        JSONObject response = bsenService.register(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
@@ -41,15 +41,10 @@ public class BsenController {
         return response;
     }
 
-    @GetMapping("productlists")
-    public JSONObject getProductLists(String classifyId) {
-        logger.info("##进入bsen商品列表##classifyId: "+classifyId);
-        JSONObject response = new JSONObject();
-        JSONObject data =bsenService.getProductLists(classifyId);
-        //查询结果数据封装
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+    @PostMapping("productlists")
+    public JSONObject getProductLists(@RequestBody Map<String,Object> paramsMap ) {
+        logger.info("##进入bsen商品列表##paramsMap: "+paramsMap);
+        JSONObject response =bsenService.getProductLists(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
@@ -57,11 +52,7 @@ public class BsenController {
     @PostMapping("detail")
     public JSONObject getDetailData(@RequestBody Map<String,Object> paramsMap ) {
         logger.info("##进入bsen获取详情页数据##paramsMap: "+paramsMap);
-        JSONObject response = new JSONObject();
-        JSONObject data = bsenService.getDetailData(paramsMap);
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+        JSONObject response = bsenService.getDetailData(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
@@ -131,7 +122,7 @@ public class BsenController {
 
     @PostMapping("updatedz")
     public JSONObject updateDz(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##更新点赞"+paramsMap);
+        logger.info("##更新动态点赞"+paramsMap);
         JSONObject response = bsenService.updateDz(paramsMap);
         logger.info("##response: " + response);
         return response;
@@ -169,6 +160,13 @@ public class BsenController {
     public JSONObject updateShoppingCartproNum(@RequestBody Map<String,Object> paramsMap) {
         logger.info("##更新购物车商品数量"+paramsMap);
         JSONObject response = bsenService.updateShoppingCartproNum(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+    @PostMapping("myinfo")
+    public JSONObject myinfo(@RequestBody Map<String,Object> paramsMap) {
+        logger.info("##获取我的信息"+paramsMap);
+        JSONObject response = bsenService.myinfo(paramsMap);
         logger.info("##response: " + response);
         return response;
     }

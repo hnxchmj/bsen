@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class ProductImg {
+import java.io.Serializable;
+
+public class ProductImg implements Serializable {
+    private static final long serialVersionUID = 4068011298287041932L;
     private String path;
     private String filename;
 

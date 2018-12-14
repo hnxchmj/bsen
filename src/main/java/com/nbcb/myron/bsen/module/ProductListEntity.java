@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class ProductListEntity {
+import java.io.Serializable;
+
+public class ProductListEntity implements Serializable {
+    private static final long serialVersionUID = -6758747457435163887L;
     private String id;
     private String imgUrl;
     private String desc;

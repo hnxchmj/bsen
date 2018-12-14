@@ -1,8 +1,10 @@
 package com.nbcb.myron.bsen.module;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Dynamic {
+public class Dynamic implements Serializable {
+    private static final long serialVersionUID = 8114665906675427993L;
     private String id;
     private String uId;
     private String headImgUrl;

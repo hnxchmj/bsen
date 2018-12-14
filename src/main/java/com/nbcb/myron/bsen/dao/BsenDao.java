@@ -9,6 +9,10 @@ import java.util.Map;
 @Repository
 public interface BsenDao {
 
+    User  selectUser(Map<String,Object> params);
+
+    Integer  updateUserLoginStatus(Map<String,Object> params);
+
     Integer  insertNewUser(Map<String,Object> params);
 
     DictEntity getHttpAddress(Map<String,Object> params);
@@ -39,8 +43,6 @@ public interface BsenDao {
 
     void  updataDynamicsBrowseNum(Map<String,Object> params);
 
-    User  selectUser(Map<String,Object> params);
-
     Integer  updatePlus(Map<String,Object> params);
 
     Integer  updateMinus(Map<String,Object> params);
@@ -58,6 +60,18 @@ public interface BsenDao {
     List<OrderInfo>  selectCartProductList(Map<String,Object> params);
 
     Integer  updateProductNum(Map<String,Object> params);
+
+    void  updateProductBrowseNum(Map<String,Object> params);
+
+    List<User>  selectParsePsersons(Map<String,Object> params);
+
+    UserProduct  selectDz(Map<String,Object> params);
+
+    Integer  insertDz(Map<String,Object> params);
+
+    Integer  updateDzP(Map<String,Object> params);
+
+    Integer  updateDzM(Map<String,Object> params);
 
 
 }

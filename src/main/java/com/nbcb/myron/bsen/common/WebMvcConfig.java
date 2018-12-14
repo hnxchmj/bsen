@@ -17,8 +17,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         //拦截哪些路径("/**":代表拦截所有路径.("/bs/indexdata", "/logout","/error","docs.html"):多参数传递用逗号分隔)
-        registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/bs/updatedz","/bs/addcomment","/bs/addshoppingcart","/bs/getshoppingcartpro","/bs/getshoppingcartlist","/bs/updateshoppingcartpronum");
+//        registry.addInterceptor(loginInterceptor)
+//                .addPathPatterns("/bs/myinfo");
     }
 }
 

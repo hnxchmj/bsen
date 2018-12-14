@@ -4,7 +4,7 @@
 <mapper namespace="com.nbcb.myron.bsen.dao.BsenDao">
 
     <!--开启二级缓存-->
-    <cache type="com.nbcb.myron.bsen.common.RedisCache"></cache>
+    <!--<cache type="com.nbcb.myron.bsen.common.RedisCache"></cache>-->
 <!--获得http ip-->
     <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity">
         select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
@@ -41,7 +41,7 @@
           LEFT JOIN products_files j
             ON i.pid = j.pid
         WHERE j.classify = '0'
-            AND i.soldnum > '200'
+            AND i.is_boutique = '0'
         GROUP BY i.pid;
     </select>
 
@@ -73,6 +73,42 @@
         FROM products i
         WHERE i.pid = #{id};
     </select>
+    <!--查询对当前商品点赞的所有人员-->
+    <select id="selectParsePsersons" resultType="com.nbcb.myron.bsen.module.User">
+      SELECT
+          i.path avatarUrl
+        FROM users i
+        LEFT JOIN users_products j
+        ON i.uid = j.uid
+        LEFT JOIN products k
+        ON j.pid = k.pid
+        WHERE j.pid =#{id}
+        <if test="userId != null and userId !=''">AND j.uid=#{userId}</if>
+        AND j.isdz =1;
+    </select>
+    <!--查询对当前商品点过赞的人员头像-->
+    <select id="selectDz" resultType="com.nbcb.myron.bsen.module.UserProduct">
+      SELECT j.id,j.pid,j.uid,j.isdz FROM users_products j WHERE j.pid =#{id} AND j.uid =#{userId};
+    </select>
+<!--详情插入赞-->
+    <insert id="insertDz">
+        INSERT INTO bsen_door_dev.users_products (pid,uid)
+        VALUES(#{id},#{userId})
+    </insert>
+<!--详情更新添加赞-->
+    <update id="updateDzP" flushCache="true">
+        UPDATE users_products i
+        SET i.isdz = i.isdz + 1
+        where i.pid =#{id}
+        AND i.uid=#{userId}
+    </update>
+<!--详情取消赞-->
+    <update id="updateDzM" flushCache="true">
+        UPDATE users_products i
+        SET i.isdz = i.isdz - 1
+        where i.pid =#{id}
+        AND i.uid=#{userId}
+    </update>
 
     <resultMap type="com.nbcb.myron.bsen.module.Product" id="SwipeImgs">
         <id property="id" column="pid"/>
@@ -103,12 +139,12 @@
         WHERE i.pid = #{bridgeId2}
         AND i.classify = '1';
     </select>
-<!--获取商品详情图-->
+<!--获取商品评论-->
     <select id="getEvaluates" resultType="com.nbcb.myron.bsen.module.User">
       SELECT
           i.turn_over turnover,
           i.evaluate,
-          i.time,
+          FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') time,
           j.uid,
           j.nickname
         FROM orders i
@@ -169,6 +205,7 @@
         ON i.userid = j.uid
         LEFT JOIN products_files k
         ON i.id = k.did
+        WHERE j.authority=0
         GROUP BY i.time DESC
         LIMIT #{page},#{offset};
     </select>
@@ -253,6 +290,7 @@
         LEFT JOIN products_files k
         ON i.id = k.did
         WHERE i.id=#{id}
+        AND j.authority = 0
         GROUP BY i.time
     </select>
 
@@ -261,22 +299,43 @@
         <collection property="dynamicComments" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId1 = id}" select="getDynamicComments"/>
     </resultMap>
 
+    <update id="updateProductBrowseNum" flushCache="true">
+        UPDATE products i
+        SET i.browsenum = i.browsenum + 1
+        <if test="id != null and id !=''">where i.pid =#{id}</if>
+    </update>
+
     <update id="updataDynamicsBrowseNum" flushCache="true">
         UPDATE users_dynamic i
         SET i.browsenum = i.browsenum + 1
         <if test="id != null and id !=''">where i.id =#{id}</if>
     </update>
 
+    <update id="updateUserLoginStatus" flushCache="true">
+        UPDATE users i
+        SET
+        i.session_key = #{session_key},
+        i.login_state = #{login_state},
+        i.nickname = #{nickName},
+        i.gender = #{gender},
+        i.path = #{avatarUrl}
+        where i.uid =#{uId}
+    </update>
+
     <select id="selectUser" resultType="com.nbcb.myron.bsen.module.User">
-        select uid from users where uid = #{uId}
+        select
+          login_state loginState,
+          nickname nickName,
+          gender,
+          path avatarUrl,
+          authority
+        from users where uid = #{uId}
     </select>
 
     <insert id="insertNewUser">
         INSERT INTO bsen_door_dev.users
-                    (uid,session_key,
-                     bsen_session_key)
-        VALUES (#{uId},#{session_key},
-                #{bsen_session_key})
+                    (uid,session_key,login_state,nickname,gender,path)
+        VALUES (#{uId},#{session_key},#{login_state},#{nickName},#{gender},#{avatarUrl})
     </insert>
 
     <update id="updatePlus" flushCache="true">

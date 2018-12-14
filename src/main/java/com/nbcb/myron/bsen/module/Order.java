@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class Order {
+import java.io.Serializable;
+
+public class Order implements Serializable {
+    private static final long serialVersionUID = -1124817153226542900L;
     private Integer id;
     private String  userId;
     private String  pid;

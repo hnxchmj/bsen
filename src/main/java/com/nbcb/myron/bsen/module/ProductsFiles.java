@@ -1,6 +1,9 @@
 package com.nbcb.myron.bsen.module;
 
-public class ProductsFiles {
+import java.io.Serializable;
+
+public class ProductsFiles implements Serializable {
+    private static final long serialVersionUID = -8349809388782297812L;
     private Integer id;
     private String uId;
     private String dId;
