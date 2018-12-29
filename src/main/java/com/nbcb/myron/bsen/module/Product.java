@@ -11,7 +11,7 @@ public class Product implements Serializable {
     private static final long serialVersionUID = -1808750462342354396L;
     private String id;//商品id
     private List<ProductImg> imgUrls;//轮播图集合
-    private String oldPrice;//原价
+    private Integer oldPrice;//原价
     private String newPrice;//折后价
     private String deliverPrice;//运费
     private String desc;//商品描述
@@ -36,11 +36,11 @@ public class Product implements Serializable {
         this.imgUrls = imgUrls;
     }
 
-    public String getOldPrice() {
+    public Integer getOldPrice() {
         return oldPrice;
     }
 
-    public void setOldPrice(String oldPrice) {
+    public void setOldPrice(Integer oldPrice) {
         this.oldPrice = oldPrice;
     }
 

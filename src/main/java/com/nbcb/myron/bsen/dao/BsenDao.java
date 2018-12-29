@@ -1,5 +1,6 @@
 package com.nbcb.myron.bsen.dao;
 
+import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.module.*;
 import org.springframework.stereotype.Repository;
 
@@ -26,6 +27,10 @@ public interface BsenDao {
     List<BoutiqueProduct> getBoutiqueProducts();
 
     List<ProductListEntity> getProductLists(Map<String,Object> params);
+
+    List<ProductListEntity> getProductListsJgS(Map<String,Object> params);
+
+    List<ProductListEntity> getProductListsJgJ(Map<String,Object> params);
 
     List<ProductListEntity> getSearchProducts(Map<String,Object> params);
 
@@ -57,6 +62,8 @@ public interface BsenDao {
 
     OrderInfo  selectCartProducts(Map<String,Object> params);
 
+    OrderInfo  selectDealingProduct(Map<String,Object> params);
+
     List<OrderInfo>  selectCartProductList(Map<String,Object> params);
 
     Integer  updateProductNum(Map<String,Object> params);
@@ -72,6 +79,8 @@ public interface BsenDao {
     Integer  updateDzP(Map<String,Object> params);
 
     Integer  updateDzM(Map<String,Object> params);
+
+    public Integer updateOrderInfo(Map<String,Object> paramsMap);
 
 
 }

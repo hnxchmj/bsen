@@ -7,7 +7,7 @@ public class ProductListEntity implements Serializable {
     private String id;
     private String imgUrl;
     private String desc;
-    private String oldPrice;
+    private Integer oldPrice;
     private String newPrice;
     private String soldNum;
     private String browseNum;
@@ -36,11 +36,11 @@ public class ProductListEntity implements Serializable {
         this.desc = desc;
     }
 
-    public String getOldPrice() {
+    public Integer getOldPrice() {
         return oldPrice;
     }
 
-    public void setOldPrice(String oldPrice) {
+    public void setOldPrice(Integer oldPrice) {
         this.oldPrice = oldPrice;
     }
 

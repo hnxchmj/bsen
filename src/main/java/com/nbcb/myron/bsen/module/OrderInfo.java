@@ -7,7 +7,7 @@ public class OrderInfo implements Serializable {
     private Integer id;
     private String pid;
     private String turnOver;
-    private String price;
+    private Integer price;
     private String imgUrl;
     private String desc;
 
@@ -35,11 +35,11 @@ public class OrderInfo implements Serializable {
         this.turnOver = turnOver;
     }
 
-    public String getPrice() {
+    public Integer getPrice() {
         return price;
     }
 
-    public void setPrice(String price) {
+    public void setPrice(Integer price) {
         this.price = price;
     }
 

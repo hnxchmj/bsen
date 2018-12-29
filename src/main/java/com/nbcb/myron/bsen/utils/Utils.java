@@ -1,19 +1,21 @@
 package com.nbcb.myron.bsen.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.nbcb.myron.bsen.common.MD5;
 import com.nbcb.myron.bsen.module.User;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Utils {
 
@@ -115,5 +117,113 @@ public class Utils {
             sb.append(wxSessionkey);
         }
         return sb.toString();
+    }
+
+    /**
+     * 针对微信支付生成商户订单号，为了避免微信商户订单号重复（下单单位支付），
+     * @return
+     */
+    public static String generateOrderSN() {
+        StringBuffer orderSNBuffer = new StringBuffer();
+        orderSNBuffer.append(System.currentTimeMillis());
+        orderSNBuffer.append(getRandomString(7));
+        return orderSNBuffer.toString();
+    }
+    /**
+     * 获取随机字符串
+     * @param len
+     * @return
+     */
+    public static String getRandomString(int len) {
+        StringBuilder sb = new StringBuilder(len);
+        Random rnd  = new Random();
+        String AB = MD5.randomStr();
+        for (int i = 0; i < len; i++){
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * @Title: getIpAddress
+     * @Description: 获取客户端真实IP地址
+     * @author yihj
+     * @param @param request
+     * @param @param response
+     * @param @return    参数
+     * @return String    返回类型
+     * @throws
+     */
+    public static String getIpAddress(HttpServletRequest request) {
+        // 避免反向代理不能获取真实地址, 取X-Forwarded-For中第一个非unknown的有效IP字符串
+        String ip = request.getHeader("x-forwarded-for");
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)){
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)){
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)){
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+    /**
+     *
+     * 方法用途: 对所有传入参数按照字段名的 ASCII 码从小到大排序（字典序），并且生成url参数串<br>
+     * 实现步骤: <br>
+     *
+     * @param paraMap   要排序的Map对象
+     * @param urlEncode   是否需要URLENCODE
+     * @param keyToLower    是否需要将Key转换为全小写
+     *            true:key转化成小写，false:不转化
+     * @return
+     */
+    public static String formatUrlMap(Map<String, Object> paraMap, boolean urlEncode, boolean keyToLower){
+        String buff = "";
+        Map<String, Object> tmpMap = paraMap;
+        try
+        {
+            List<Map.Entry<String, Object>> infoIds = new ArrayList<Map.Entry<String, Object>>(tmpMap.entrySet());
+            // 对所有传入参数按照字段名的 ASCII 码从小到大排序（字典序）
+            Collections.sort(infoIds, new Comparator<Map.Entry<String, Object>>() {
+                @Override
+                public int compare(Map.Entry<String, Object> o1, Map.Entry<String, Object> o2) {
+                    return (o1.getKey()).toString().compareTo(o2.getKey());
+                }
+            });
+            // 构造URL 键值对的格式
+            StringBuilder buf = new StringBuilder();
+            for (Map.Entry<String, Object> item : infoIds)
+            {
+                if (StringUtils.isNotBlank(item.getKey()))
+                {
+                    String key = item.getKey();
+                    String val = (String)item.getValue();
+                    if (urlEncode)
+                    {
+                        val = URLEncoder.encode(val, "utf-8");
+                    }
+                    if (keyToLower)
+                    {
+                        buf.append(key.toLowerCase() + "=" + val);
+                    } else
+                    {
+                        buf.append(key + "=" + val);
+                    }
+                    buf.append("&");
+                }
+
+            }
+            buff = buf.toString();
+            if (buff.isEmpty() == false)
+            {
+                buff = buff.substring(0, buff.length() - 1);
+            }
+        } catch (Exception e)
+        {
+            return null;
+        }
+        return buff;
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
@@ -22,7 +23,7 @@ public class BsenController {
 
     @PostMapping("register")
     public JSONObject register(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##用户注册"+paramsMap);
+        logger.info("##进入用户注册"+paramsMap);
         JSONObject response = bsenService.register(paramsMap);
         logger.info("##response: " + response);
         return response;
@@ -122,7 +123,7 @@ public class BsenController {
 
     @PostMapping("updatedz")
     public JSONObject updateDz(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##更新动态点赞"+paramsMap);
+        logger.info("##进入更新动态点赞"+paramsMap);
         JSONObject response = bsenService.updateDz(paramsMap);
         logger.info("##response: " + response);
         return response;
@@ -130,44 +131,58 @@ public class BsenController {
 
     @PostMapping("addcomment")
     public JSONObject addComment(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##添加店铺动态评论"+paramsMap);
+        logger.info("##进入添加店铺动态评论"+paramsMap);
         JSONObject response = bsenService.addComment(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
     @PostMapping("addshoppingcart")
     public JSONObject addShoppingCart(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##添加商品到购物车"+paramsMap);
+        logger.info("##进入添加商品到购物车"+paramsMap);
         JSONObject response = bsenService.addShoppingCart(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
     @PostMapping("getshoppingcartpro")
     public JSONObject getShoppingCartPro(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##获取购物车产品详情"+paramsMap);
+        logger.info("##进入获取购物车产品详情"+paramsMap);
         JSONObject response = bsenService.getShoppingCartPro(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
     @PostMapping("getshoppingcartlist")
     public JSONObject getShoppingCartList(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##获取购物车商品列表"+paramsMap);
+        logger.info("##进入获取购物车商品列表"+paramsMap);
         JSONObject response = bsenService.getShoppingCartList(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
     @PostMapping("updateshoppingcartpronum")
     public JSONObject updateShoppingCartproNum(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##更新购物车商品数量"+paramsMap);
+        logger.info("##进入更新购物车商品数量"+paramsMap);
         JSONObject response = bsenService.updateShoppingCartproNum(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
     @PostMapping("myinfo")
     public JSONObject myinfo(@RequestBody Map<String,Object> paramsMap) {
-        logger.info("##获取我的信息"+paramsMap);
+        logger.info("##进入获取我的信息"+paramsMap);
         JSONObject response = bsenService.myinfo(paramsMap);
         logger.info("##response: " + response);
         return response;
+    }
+    @PostMapping("prepayment")
+    public Map<String,Object> prepayment(HttpServletRequest request, @RequestBody Map<String, Object> paramsMap) {
+        logger.info("##进入预支付统一下单##");
+        Map<String,Object> response = bsenService.prepayment(request,paramsMap);
+        logger.info("微信最后拉起支付页需要的response: "+response);
+        return response;
+    }
+    @PostMapping("updateorderinfo")
+    public JSONObject updateOrderInfo(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##更新订单状态: "+paramsMap);
+        JSONObject response = bsenService.updateOrderInfo(paramsMap);
+        logger.info("##response: " + response);
+        return null;
     }
 }

@@ -8,6 +8,10 @@ import com.nbcb.myron.bsen.dao.BsenDao;
 import com.nbcb.myron.bsen.module.*;
 import com.nbcb.myron.bsen.service.BsenService;
 import com.nbcb.myron.bsen.utils.Utils;
+import com.nbcb.myron.bsen.utils.XmlUtil;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +19,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class BsenServiceImpl implements BsenService {
@@ -23,7 +29,7 @@ public class BsenServiceImpl implements BsenService {
     private final Logger logger = LoggerFactory.getLogger(BsenServiceImpl.class);
 
     private RedisTemplate redisTemplate;
-    private static final long EXPIRE_TIME_IN_MINUTES = 50; // redis过期时间
+    private static final long EXPIRE_TIME_IN_MINUTES = 60; // redis过期时间
 
     private String httpStr;
     @Autowired
@@ -49,8 +55,8 @@ public class BsenServiceImpl implements BsenService {
         String avatarUrl = (String) paramsMap.get("avatarUrl");
         Integer gender = (Integer) paramsMap.get("gender");
 
-        String appid = "wxb9c55e43b5fa55bd";
-        String secret = "94c6ef40162c76ebf8a9ca13b8548866";
+        String appid = "wx0cc8ab70b74f6211";
+        String secret = "be78809d3f2f4447ead9735a574cba85";
         String url = "https://api.weixin.qq.com/sns/jscode2session";
         String params ="appid=" +appid+"&secret=" +secret+"&js_code="+code+"&grant_type=authorization_code";
         String result = HttpRequest.sendGet(url,params);
@@ -164,14 +170,16 @@ public class BsenServiceImpl implements BsenService {
             String conf =(String) paramsMap.get("cond");
             if ("zh".equals(conf)){
 
-            }else if ("xp".equals(conf)){
-
             }else if ("zr".equals(conf)){
 
             }else if ("xp".equals(conf)){
 
             }else{//价格
-
+                if (conf.indexOf("true")>0){//升
+                    prcItems = bsenDao.getProductListsJgS(paramsMap);
+                }else{//降
+                    prcItems = bsenDao.getProductListsJgJ(paramsMap);
+                }
             }
         }
         Iterator it = prcItems.iterator();
@@ -364,6 +372,11 @@ public class BsenServiceImpl implements BsenService {
     public JSONObject addComment(Map<String, Object> paramsMap) {
 
         JSONObject response = new JSONObject();
+        String uId = getUId(paramsMap);
+        if (uId != null){
+            paramsMap.remove("loginState");
+            paramsMap.put("userId",uId);
+        }
         //检查用户是否重复评论
         Integer counts = bsenDao.selectUserComment(paramsMap);
         if (counts ==0){
@@ -394,23 +407,39 @@ public class BsenServiceImpl implements BsenService {
             order.setPid((String)paramsMap.get("id"));
             order.setTurnOver((String)paramsMap.get("turnOver"));
             order.setPrice((String)paramsMap.get("price"));
-            order.setStatus((Integer)paramsMap.get("status"));
+            Integer status = (Integer)paramsMap.get("status");
+            order.setStatus(status);
             order.setUserId((String)paramsMap.get("userId"));
             order.setTime((String)paramsMap.get("time"));
-            bsenDao.addProduct(order);
-            //查询当前客户购物车的所有商品数量
-            Integer totalCartNum = bsenDao.selectCartProductsCounts(paramsMap);
-            JSONObject data = new JSONObject();
-            data.put("counts",totalCartNum);
-            data.put("id",order.getId());
-            if (order.getId() > 0 ){
+            //添加到购物车
+            if (status == 0){
+                bsenDao.addProduct(order);
+                //查询当前客户购物车的所有商品数量
+                Integer totalCartNum = bsenDao.selectCartProductsCounts(paramsMap);
+                JSONObject data = new JSONObject();
+                data.put("counts",totalCartNum);
+                data.put("id",order.getId());
+                if (order.getId() > 0 ){
+                    response.put("data",data);
+                    response.put("code","0000");
+                    response.put("msg","添加成功");
+                }else{
+                    response.put("code","0001");
+                    response.put("msg","添加失败");
+                }
+            }
+            //进行支付交易存储临时交易订单数据
+            if (status == 2){
+                redisTemplate = getRedisTemplate();
+                String tempOrderId = MD5.randomStr();
+                redisTemplate.opsForValue().set(tempOrderId,order,EXPIRE_TIME_IN_MINUTES, TimeUnit.MINUTES);
+                JSONObject data = new JSONObject();
+                data.put("tempOrderId",tempOrderId);
                 response.put("data",data);
                 response.put("code","0000");
-                response.put("msg","添加成功");
-            }else{
-                response.put("code","0001");
-                response.put("msg","添加失败");
+                response.put("msg","添加成功,请在1小时内完成支付");
             }
+
         }else{
             response.put("code","0001");
             response.put("msg","该用户不存在");
@@ -422,11 +451,40 @@ public class BsenServiceImpl implements BsenService {
     public JSONObject getShoppingCartPro(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
         JSONObject data = new JSONObject();
+
+        String uId = getUId(paramsMap);
+        if (uId != null){
+            paramsMap.remove("loginState");
+            paramsMap.put("userId",uId);
+        }
+
         //获取http协议地址
         getHttpAddress();
+
         //获取订单详情
         if (!paramsMap.isEmpty()){
-            OrderInfo orderInfo = bsenDao.selectCartProducts(paramsMap);
+            OrderInfo orderInfo =null;
+            //判断订单是否正在交易: 2- 正在交易,0- 从购物车拿出
+            if (2 ==(Integer)paramsMap.get("status")){
+                Order order = getDealingByPid(paramsMap);
+                Map<String, Object> daoParams = new HashMap<>();
+                daoParams.put("id",order.getId());
+                orderInfo = bsenDao.selectDealingProduct(daoParams);
+                //对正在交易的产品封装
+                String priceStr = order.getPrice();
+                Integer priceInt = null;
+                if(priceStr!=null){
+                    priceInt = Integer.valueOf(priceStr);
+                }
+                orderInfo.setPrice(priceInt);
+                String turnOver = order.getTurnOver();
+                orderInfo.setTurnOver(turnOver);
+
+                data.put("orderInfo",orderInfo);
+            }
+            if (0 ==(Integer)paramsMap.get("status")){
+                orderInfo = bsenDao.selectCartProducts(paramsMap);
+            }
             if (orderInfo!=null){
                 String imgPath = httpStr+orderInfo.getImgUrl();
                 orderInfo.setImgUrl(imgPath);
@@ -516,6 +574,120 @@ public class BsenServiceImpl implements BsenService {
     }
 
     @Override
+    public Map<String,Object> prepayment(HttpServletRequest request,Map<String, Object> paramsMap) {
+
+        Map<String, Object> paramsWxMap = new HashMap<>();
+        paramsWxMap.put("appid","wx0cc8ab70b74f6211");//小程序ID
+        paramsWxMap.put("mch_id","1522104721");//商户号
+        paramsWxMap.put("trade_type","JSAPI");//交易类型
+
+        String uId = getUId(paramsMap);
+        if (uId != null){
+            paramsWxMap.put("openid",uId);//用户标识
+        }
+        paramsWxMap.put("nonce_str",MD5.randomStr());//随机字符串
+        String out_trade_no = Utils.generateOrderSN();
+        paramsWxMap.put("out_trade_no",out_trade_no);//商户订单号
+        paramsWxMap.put("body","佰森门业"+"-"+out_trade_no);//商品描述
+
+        String amountMoney = (String)paramsMap.get("amountMoney");
+        paramsWxMap.put("total_fee",amountMoney);//标价金额
+
+        String spbill_create_ip= Utils.getIpAddress(request);
+        paramsWxMap.put("spbill_create_ip",spbill_create_ip);//终端IP
+
+        paramsWxMap.put("notify_url","http://wxpay.wxutil.com/pub_v2/pay/notify.v2.php");//通知地址
+
+        //对发送参数进行签名
+        String stringA =Utils.formatUrlMap(paramsWxMap,false,false);
+        stringA =stringA + "&key=2923965h6ua1ng1me6ngju81n4CCE050";
+
+        String sign1=null;
+        try {
+            sign1 =  MD5.md5(stringA,"").toUpperCase();
+        }catch (Exception e){
+            logger.info("发送参数签名异常",e);
+        }
+        paramsWxMap.put("sign",sign1);//签名
+
+        logger.info("请求参数: "+paramsWxMap);
+        String url="https://api.mch.weixin.qq.com/pay/unifiedorder";
+        String xmlParamsStr=XmlUtil.encode(paramsWxMap);
+
+        String result = HttpRequest.sendPost(url,xmlParamsStr);
+        Document emlemet = null;
+        try{
+            emlemet = DocumentHelper.parseText(result);
+        }catch (DocumentException e){
+            logger.info("xml转jsonObject异常:",e);
+        }
+        Map<String,Object> response = XmlUtil.elementToMap(emlemet.getRootElement());
+
+        //对微信返回数据进行签名验证
+        String wxSign = (String)response.get("sign");
+        response.remove("sign");
+        //按字典序对Map键值对排序
+        String stringB =Utils.formatUrlMap(response,false,false);
+        stringB = stringB  + "&key=2923965h6ua1ng1me6ngju81n4CCE050";
+        String sign2=null;
+        try {
+            sign2 =  MD5.md5(stringB,"").toUpperCase();
+        }catch (Exception e){
+            logger.info("微信返回数据签名异常",e);
+        }
+        //对微信返回的数据进行签名验证
+        if (wxSign.equals(sign2)){
+            if ("SUCCESS".equals(response.get("return_code"))){
+                if ("SUCCESS".equals(response.get("result_code"))){
+                    Map<String,Object> preResult = new HashMap<>();
+                    preResult.put("appId",response.get("appid"));
+                    String timeStamp = ""+System.currentTimeMillis();
+                    preResult.put("timeStamp",timeStamp);//时间戳从1970年1月1日00:00:00至今的秒数,即当前的时间
+                    String nonceStr = MD5.randomStr();
+                    preResult.put("nonceStr",nonceStr);//随机字符串，长度为32个字符以下
+                    preResult.put("signType","MD5");//随机字符串，长度为32个字符以下
+                    String _package = "prepay_id="+ response.get("prepay_id");
+                    preResult.put("package",_package);//统一下单接口返回的 prepay_id 参数值，提交格式如：prepay_id=*
+                    //按字典序对Map键值对排序
+                    String _paysign =Utils.formatUrlMap(preResult,false,false);
+                    _paysign = _paysign  + "&key=2923965h6ua1ng1me6ngju81n4CCE050";
+                    String paySign=null;
+                    try {
+                        paySign =  MD5.md5(_paysign,"").toUpperCase();
+                    }catch (Exception e){
+                        logger.info("微信最后拉起支付页面参数签名异常",e);
+                    }
+                    preResult.put("paySign",paySign);
+                    preResult.put("out_trade_no",out_trade_no);
+                    preResult.put("return_code",response.get("return_code"));
+                    preResult.put("return_msg",response.get("return_msg"));
+                    preResult.put("result_code",response.get("result_code"));
+                    return preResult;
+                }else{
+                    return response;
+                }
+            }else{
+                return response;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public JSONObject updateOrderInfo(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        Integer count = bsenDao.updateOrderInfo(paramsMap);
+        if (count == 1){
+            response.put("code","0000");
+            response.put("msg","更新成功");
+        }else{
+            response.put("code","0001");
+            response.put("msg","更新失败");
+        }
+        return response;
+    }
+
+    @Override
     public JSONObject adddynamicdesc(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
         String leaveAMessage = (String)paramsMap.get("desc");
@@ -590,6 +762,13 @@ public class BsenServiceImpl implements BsenService {
         String uId = (String)((JSONObject)redisTemplate.opsForValue().get(loginState)).get("uId");
         logger.info("redis数据库的用户uId: "+uId);
         return uId;
+    }
+    private Order getDealingByPid(Map<String,Object> paramsMap) {
+        String tempOrderId = (String)paramsMap.get("pid");
+        redisTemplate = getRedisTemplate();
+        Order order = (Order)redisTemplate.opsForValue().get(tempOrderId);
+        logger.info("redis数据库正在参与交易的order: "+order);
+        return order;
     }
     private void getHttpAddress() {
         Map<String,Object> params = new HashMap<>();

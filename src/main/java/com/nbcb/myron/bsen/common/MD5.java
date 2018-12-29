@@ -4,6 +4,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Random;
+import java.util.UUID;
+
 /**
  * MD5通用类
  */
@@ -42,5 +45,16 @@ public class MD5 {
             return true;
         }
         return false;
+    }
+    /**
+     * MD5生成预支付随机32位字符串
+     *
+     * @return String
+     */
+    public static String randomStr(){
+        //返回随机字符串，长度32位
+        UUID uuid = UUID.randomUUID();
+        String random = uuid.toString().replace("-", "");
+        return random;
     }
 }

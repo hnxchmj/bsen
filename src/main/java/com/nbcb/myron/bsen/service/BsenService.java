@@ -3,6 +3,7 @@ package com.nbcb.myron.bsen.service;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 public interface BsenService {
@@ -40,4 +41,8 @@ public interface BsenService {
     public JSONObject updateShoppingCartproNum(Map<String,Object> paramsMap);
 
     public JSONObject myinfo(Map<String,Object> paramsMap);
+
+    public Map<String,Object> prepayment(HttpServletRequest request,Map<String, Object> paramsMap);
+
+    public JSONObject updateOrderInfo(Map<String, Object> paramsMap);
 }

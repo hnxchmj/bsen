@@ -61,6 +61,40 @@
         <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
     </select>
 
+<!--全部分类商品按价格排序-升-->
+    <select id="getProductListsJgS" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
+        SELECT
+        i.pid            id,
+        i.desc,
+        i.price          oldPrice,
+        i.cuted_price    newPrice,
+        i.soldnum        soldNum,
+        i.browsenum      browseNum,
+        CONCAT(j.path,j.filename)    imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
+        GROUP BY i.price ASC;
+    </select>
+
+<!--全部分类商品按价格排序-降-->
+    <select id="getProductListsJgJ" resultType="com.nbcb.myron.bsen.module.ProductListEntity">
+        SELECT
+        i.pid            id,
+        i.desc,
+        i.price          oldPrice,
+        i.cuted_price    newPrice,
+        i.soldnum        soldNum,
+        i.browsenum      browseNum,
+        CONCAT(j.path,j.filename)    imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
+        GROUP BY i.price DESC;
+    </select>
+
 <!--获取商品详情-->
     <select id="getDetail" resultMap="SwipeImgs">
       SELECT
@@ -387,6 +421,23 @@
         SELECT COUNT(*) FROM orders i WHERE i.status='0' AND i.user_id=#{userId} ;
     </select>
 
+    <select id="selectDealingProduct" resultType="com.nbcb.myron.bsen.module.OrderInfo">
+      SELECT
+          concat(k.path,k.filename) imgUrl,
+          j.desc
+        FROM products j
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+--           AND i.id = #{id}
+--           AND i.i_id = #{pid}
+--           AND k.classify = '2'
+--           AND i.status = #{status}
+           GROUP BY i.i_id
+    </select>
+
     <select id="selectCartProducts" resultType="com.nbcb.myron.bsen.module.OrderInfo">
         SELECT
           i.id id,
@@ -432,6 +483,13 @@
         SET turn_over = #{turnOver}
         WHERE user_id = #{userId}
             AND id = #{id}
+    </update>
+    <!--更新订单信息-->
+    <update id="updateOrderInfo" flushCache="true">
+        UPDATE orders t
+        SET t.status = #{status},
+        t.order_num = #{order_num}
+        WHERE t.id = #{id}
     </update>
 
 </mapper>
