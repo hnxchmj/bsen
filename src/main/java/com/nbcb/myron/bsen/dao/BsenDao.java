@@ -56,7 +56,15 @@ public interface BsenDao {
 
     Integer  selectUserComment(Map<String,Object> params);
 
-    void addProduct(Order order);
+    Integer selectProduct(Order order);
+
+    Integer selectProduct(Map<String,Object> params);
+
+    Integer updateProduct(Order order);
+
+    void addProductC(Order order);
+
+    Integer addProductO(Map<String,Object> params);
 
     Integer  selectCartProductsCounts(Map<String,Object> params);
 

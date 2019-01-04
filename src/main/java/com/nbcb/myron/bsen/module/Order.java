@@ -67,4 +67,17 @@ public class Order implements Serializable {
     public void setTime(String time) {
         this.time = time;
     }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", userId='" + userId + '\'' +
+                ", pid='" + pid + '\'' +
+                ", status=" + status +
+                ", turnOver='" + turnOver + '\'' +
+                ", price='" + price + '\'' +
+                ", time='" + time + '\'' +
+                '}';
+    }
 }
