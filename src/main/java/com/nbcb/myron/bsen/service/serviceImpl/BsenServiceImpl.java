@@ -2,12 +2,13 @@ package com.nbcb.myron.bsen.service.serviceImpl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.nbcb.myron.bsen.common.ApplicationContextHolder;
 import com.nbcb.myron.bsen.common.HttpRequest;
 import com.nbcb.myron.bsen.common.MD5;
+import com.nbcb.myron.bsen.common.MyRedisCache;
 import com.nbcb.myron.bsen.dao.BsenDao;
 import com.nbcb.myron.bsen.module.*;
 import com.nbcb.myron.bsen.service.BsenService;
+import com.nbcb.myron.bsen.utils.KdniaoTrackQueryAPI;
 import com.nbcb.myron.bsen.utils.Utils;
 import com.nbcb.myron.bsen.utils.XmlUtil;
 import org.dom4j.Document;
@@ -16,23 +17,22 @@ import org.dom4j.DocumentHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class BsenServiceImpl implements BsenService {
 
     private final Logger logger = LoggerFactory.getLogger(BsenServiceImpl.class);
 
-    private RedisTemplate redisTemplate;
+    private MyRedisCache myRedisCache;
     private static final long EXPIRE_TIME_IN_MINUTES = 60; // redis过期时间
-
     private String httpStr;
+
     @Autowired
     private BsenDao bsenDao;
 
@@ -40,11 +40,11 @@ public class BsenServiceImpl implements BsenService {
         this.httpStr = httpStr;
     }
 
-    private RedisTemplate getRedisTemplate() {
-        if (redisTemplate == null) {
-            redisTemplate = ApplicationContextHolder.getBean("redisTemplate");
+    private MyRedisCache getRedisTemplate() {
+        if (myRedisCache == null) {
+            myRedisCache = new MyRedisCache("cookies");
         }
-        return redisTemplate;
+        return myRedisCache;
     }
 
     @Override
@@ -110,8 +110,9 @@ public class BsenServiceImpl implements BsenService {
             //存入redis用户登录态loginState信息
             acceptParams.clear();
             acceptParams.put("uId", data.get("openid"));
-            redisTemplate = getRedisTemplate();
-            redisTemplate.opsForValue().set(loginState, acceptParams);
+            myRedisCache = getRedisTemplate();
+            logger.info("###存入redis用户参数" + acceptParams.toJSONString());
+            myRedisCache.putObject(loginState, acceptParams);
             acceptParams.clear();
             acceptParams.put("login_state", loginState);
             response.put("data", acceptParams);
@@ -124,6 +125,7 @@ public class BsenServiceImpl implements BsenService {
 
     @Override
     public JSONObject getIndexData() {
+        JSONObject response = new JSONObject();
         JSONObject data = new JSONObject();
         //获取http协议地址
         getHttpAddress();
@@ -154,7 +156,11 @@ public class BsenServiceImpl implements BsenService {
             entity.setImgUrl(imgPath);
         }
         data.put("boutiqueProducts", boutiqueProducts);
-        return data;
+        //查询结果数据封装
+        response.put("data", data);
+        response.put("code", "0000");
+        response.put("msg", "success");
+        return response;
     }
 
     @Override
@@ -186,6 +192,12 @@ public class BsenServiceImpl implements BsenService {
         Iterator it = prcItems.iterator();
         while (it.hasNext()) {
             ProductListEntity entity = (ProductListEntity) it.next();
+            //查询单个商品的已售数量
+            String pid = entity.getId();
+            Map<String, Object> params = new HashMap<>();
+            params.put("pid", pid);
+            String soldNum = bsenDao.selectProductSoldNum(params);
+            entity.setSoldNum(soldNum);
             String imgPath = httpStr + entity.getImgUrl();
             entity.setImgUrl(imgPath);
         }
@@ -276,6 +288,7 @@ public class BsenServiceImpl implements BsenService {
         //获取http协议地址
         getHttpAddress();
         //获取砍价商品信息
+        JSONObject response = new JSONObject();
         JSONObject data = new JSONObject();
         List<CutProduct> cutProducts = bsenDao.getCutProductsList();
         Iterator ite = cutProducts.iterator();
@@ -285,15 +298,19 @@ public class BsenServiceImpl implements BsenService {
             entity.setImgUrl(imgPath);
         }
         data.put("cutProducts", cutProducts);
-        return data;
+        response.put("data", data);
+        response.put("code", "0000");
+        response.put("msg", "success");
+        return response;
     }
 
     @Override
     public JSONObject getSearchProducts(String keyWord) {
+        //获取所有正在砍价商品
+        JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
         //获取http协议地址
         getHttpAddress();
-        //获取所有正在砍价商品
-        JSONObject data = new JSONObject();
         //获取商品列表
         Map<String, Object> params = new HashMap<>();
         params.put("keyWord", keyWord);
@@ -305,7 +322,10 @@ public class BsenServiceImpl implements BsenService {
             entity.setImgUrl(imgPath);
         }
         data.put("prcItems", prcItems);
-        return data;
+        response.put("data", data);
+        response.put("code", "0000");
+        response.put("msg", "success");
+        return response;
     }
 
     @Override
@@ -323,6 +343,7 @@ public class BsenServiceImpl implements BsenService {
 
     @Override
     public JSONObject dynamicdetail(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
         JSONObject data = new JSONObject();
         //更新动态详情浏览量
         bsenDao.updataDynamicsBrowseNum(paramsMap);
@@ -343,8 +364,11 @@ public class BsenServiceImpl implements BsenService {
             }
             dynamicdetail.setContentImgs(imgs);
             data.put("dynamicdetail", dynamicdetail);
+            response.put("data", data);
+            response.put("code", "0000");
+            response.put("msg", "success");
         }
-        return data;
+        return response;
     }
 
     @Override
@@ -454,9 +478,9 @@ public class BsenServiceImpl implements BsenService {
             }
             //进行支付交易存储临时交易订单数据
             if (status == 2) {
-                redisTemplate = getRedisTemplate();
+                myRedisCache = getRedisTemplate();
                 String tempOrderId = MD5.randomStr();
-                redisTemplate.opsForValue().set(tempOrderId, order, EXPIRE_TIME_IN_MINUTES, TimeUnit.MINUTES);
+                myRedisCache.putObject(tempOrderId, order);
                 JSONObject data = new JSONObject();
                 data.put("tempOrderId", tempOrderId);
                 response.put("data", data);
@@ -493,14 +517,16 @@ public class BsenServiceImpl implements BsenService {
         //获取订单详情
         if (!paramsMap.isEmpty()) {
             OrderInfo orderInfo = null;
-            JSONArray resultOrder = null;
+            JSONArray resultOrder = new JSONArray();
             //判断订单是否正在交易: 2- 正在交易,0- 从购物车拿出
-            JSONArray array = JSONObject.parseArray((String)paramsMap.get("ids"));
-            for (int i = 0; i <array.size() ; i++) {
-                JSONObject obj = (JSONObject)array.get(i);
-                Map<String,Object> params = new HashMap<>();
+            String idsStr = (String) paramsMap.get("ids");
+            logger.info("##ids:" + idsStr);
+            List array = JSONArray.parseArray(idsStr);
+            for (int i = 0; i < array.size(); i++) {
+                JSONObject obj = (JSONObject) array.get(i);
+                Map<String, Object> params = new HashMap<>();
                 if (2 == (Integer) obj.get("status")) {
-                    params.put("tempOrderId",obj.get("temporderid"));
+                    params.put("tempOrderId", obj.get("temporderid"));
                     Order order = getDealingBytempOrderId(params);
                     Map<String, Object> daoParams = new HashMap<>();
                     //产品pid
@@ -518,9 +544,10 @@ public class BsenServiceImpl implements BsenService {
                     orderInfo.setTurnOver(turnOver);
                 }
                 if (0 == (Integer) obj.get("status")) {
-                    params.put("id",obj.get("id"));
-                    params.put("pid",obj.get("pid"));
-                    params.put("status",obj.get("status"));
+                    params.put("userId", paramsMap.get("userId"));
+                    params.put("id", obj.get("id"));
+                    params.put("pid", obj.get("pid"));
+                    params.put("status", obj.get("status"));
                     orderInfo = bsenDao.selectCartProducts(params);
                 }
                 if (orderInfo != null) {
@@ -729,20 +756,40 @@ public class BsenServiceImpl implements BsenService {
         if (uId != null) {
             paramsMap.remove("loginState");
             paramsMap.put("userId", uId);
-            JSONArray arrlist = (JSONArray)paramsMap.get("plist");
+            String plistStr = (String) paramsMap.get("plist");
+            logger.info("##plist:" + plistStr);
+            String selfGet = (String) paramsMap.get("selfGet");
+            JSONObject userObj = JSONObject.parseObject((String) paramsMap.get("userInfo"));
+            List arrlist = JSONArray.parseArray(plistStr);
             for (int i = 0; i < arrlist.size(); i++) {
-                logger.info("更新第" + (i+1) +"个商品");
+                logger.info("更新第" + (i + 1) + "个商品");
                 Map<String, Object> params = new HashMap<>();
-                JSONObject obj = (JSONObject)arrlist.get(i);
-                params.put("userId",paramsMap.get("userId"));
-                params.put("pid",obj.get("pid"));
-                params.put("status","1");
-                params.put("turnOver",obj.get("orderNum"));
-                params.put("price",obj.get("orderUnitPrice"));
-                params.put("order_num",paramsMap.get("order_num"));
+                JSONObject obj = (JSONObject) arrlist.get(i);
+                params.put("userId", paramsMap.get("userId"));
+                params.put("pid", obj.get("pid"));
+                params.put("status", 1);
+                String time = "" + System.currentTimeMillis();//支付完成保存订单时间
+                params.put("time", time);
+                params.put("turnOver", obj.get("orderNum"));
+                params.put("price", obj.get("orderUnitPrice").toString());
+                params.put("order_num", paramsMap.get("order_num"));
+
+                params.put("self_get", selfGet);
+                String name = (String) userObj.get("userName");
+                String mobile = (String) userObj.get("telNumber");
+                String provinceName = (String) userObj.get("provinceName");
+                String cityName = (String) userObj.get("cityName");
+                String countyName = (String) userObj.get("countyName");
+                String detailInfo = (String) userObj.get("detailInfo");
+                String address = "true".equals(selfGet) ? " " : provinceName + cityName + countyName + detailInfo;
+                params.put("link_man", name);
+                params.put("link_phone", mobile);
+                params.put("link_address", address);
+                params.put("order_status", "1");
+
                 Integer count_ = bsenDao.selectProduct(params);
                 if (count_ == 0) {
-                    Integer count=bsenDao.addProductO(params);
+                    Integer count = bsenDao.addProductO(params);
                     if (count == 1) {
                         response.put("code", "0000");
                         response.put("msg", "添加成功");
@@ -769,39 +816,245 @@ public class BsenServiceImpl implements BsenService {
     }
 
     @Override
+    public JSONObject myOrderList(Map<String, Object> paramsMap) {
+        String uId = getUId(paramsMap);
+        JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
+
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            paramsMap.put("userId", uId);
+
+            //获取http协议地址
+            getHttpAddress();
+            List<Order> orderlist = null;
+            if (!paramsMap.isEmpty()) {
+                paramsMap.put("uId", uId);
+                User user = bsenDao.selectUser(paramsMap);
+                if (user.getAuthority() == 0 && !"o".equals(paramsMap.get("flag"))) {
+                    paramsMap.put("uId", 0);
+                    orderlist = bsenDao.selectAllUserOrderlist(paramsMap);
+                } else {
+                    orderlist = bsenDao.selectOrderlist(paramsMap);
+                }
+                Iterator<Order> ite = orderlist.iterator();
+                while (ite.hasNext()) {
+                    Order entity = ite.next();
+                    String imgPath = httpStr + entity.getImgUrl();
+                    entity.setImgUrl(imgPath);
+                }
+                data.put("orderlist", orderlist);
+            }
+            if (orderlist != null) {
+                response.put("data", data);
+                response.put("code", "0000");
+                response.put("msg", "查询成功");
+            } else {
+                response.put("code", "0001");
+                response.put("msg", "查询失败");
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "该用户不存在");
+        }
+        return response;
+    }
+
+    @Override
+    public JSONObject myOrderInfo(Map<String, Object> paramsMap) {
+        String uId = getUId(paramsMap);
+        JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
+
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            paramsMap.put("userId", uId);
+
+            //获取http协议地址
+            getHttpAddress();
+            OrderInfo orderInfo = null;
+            if (!paramsMap.isEmpty()) {
+                paramsMap.put("uId", uId);
+                User user = bsenDao.selectUser(paramsMap);
+                if (user.getAuthority() == 0 && "a".equals(paramsMap.get("flag"))) {
+                    paramsMap.put("uId", 0);
+                    orderInfo = bsenDao.adminSelectOrder(paramsMap);
+                } else {
+                    orderInfo = bsenDao.selectOrder(paramsMap);
+                }
+                if (!"$NON".equals(orderInfo.getTransportCode())) {
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("transportCompany", orderInfo.getTransportCode());
+                    Logistics logistics = bsenDao.selecttransportCompany(params);
+                    String transportName = logistics.getCompanyName();
+                    orderInfo.setTransportName(transportName);
+                } else {
+                    orderInfo.setTransportName("无");
+                }
+
+                String imgPath = httpStr + orderInfo.getImgUrl();
+                orderInfo.setImgUrl(imgPath);
+                data.put("orderInfo", orderInfo);
+            }
+            if (orderInfo != null) {
+                response.put("data", data);
+                response.put("code", "0000");
+                response.put("msg", "查询成功");
+            } else {
+                response.put("code", "0001");
+                response.put("msg", "查询失败");
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "该用户不存在");
+        }
+        return response;
+    }
+
+    @Override
+    public JSONObject addOrderEvaluate(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        String uId = getUId(paramsMap);
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            paramsMap.put("uId", uId);
+            //检查用户是否重复评论
+            Integer counts = bsenDao.selectUserOrderEvaluate(paramsMap);
+            if (counts == 0) {
+                String evaluateTime = "" + new Date().getTime();
+                paramsMap.put("evaluate_time", evaluateTime);
+                Integer oneComm = bsenDao.updateOrderEvaluate(paramsMap);
+                JSONObject data = new JSONObject();
+                if (oneComm == 1) {
+//                    User user = bsenDao.selectUser(paramsMap);
+//                    data.put("user", user);
+//                    data.put("evaluateTime",evaluateTime);
+                    data.put("evaluate", paramsMap.get("evaluate"));
+                    response.put("data", data);
+                    response.put("code", "0000");
+                    response.put("msg", "更新成功");
+                } else {
+                    response.put("code", "0001");
+                    response.put("msg", "更新失败");
+                }
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "用户不存在");
+        }
+        return response;
+    }
+
+    @Override
+    public JSONObject looksGoodFlow(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        KdniaoTrackQueryAPI api = new KdniaoTrackQueryAPI();
+        JSONObject data = null;
+        try {
+            String expCode = (String) paramsMap.get("transport_code");
+            String expNo = (String) paramsMap.get("transport_num");
+            String result = api.getOrderTracesByJson(expCode, expNo);
+            data = JSONObject.parseObject(result);
+            String transportCompany = (String) data.get("ShipperCode");
+            Map<String, Object> params = new HashMap<>();
+            params.put("transportCompany", transportCompany);
+            Logistics logistics = bsenDao.selecttransportCompany(params);
+            data.put("ShipperCode", logistics.getCompanyName());
+            response.put("data", data);
+            response.put("code", "0000");
+            response.put("msg", "查询成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("code", "0001");
+            response.put("msg", "查询失败");
+        }
+        return response;
+    }
+
+    @Override
+    public JSONObject searchFlowCompany(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        JSONObject data = new JSONObject();
+        List<Logistics> logisticsList = bsenDao.selectCompanyLikeName(paramsMap);
+        data.put("logisticsList", logisticsList);
+        response.put("data", data);
+        response.put("code", "0000");
+        response.put("msg", "查询成功");
+        return response;
+    }
+
+    @Override
+    public JSONObject addOrderWuLiuInfo(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        String uId = getUId(paramsMap);
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            paramsMap.put("uId", uId);
+            User user = bsenDao.selectUser(paramsMap);
+            if (user.getAuthority() == 0) {
+                paramsMap.put("uId", 0);
+                paramsMap.put("flow_time", System.currentTimeMillis());
+                Integer count = bsenDao.addOrderWuLiuInfo(paramsMap);
+                if (count > 0) {
+                    response.put("code", "0000");
+                    response.put("msg", "更新成功");
+                } else {
+                    response.put("code", "0001");
+                    response.put("msg", "更新失败");
+                }
+            } else {
+                response.put("code", "0001");
+                response.put("msg", "无权限");
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "用户不存在");
+        }
+        return response;
+    }
+
+    @Override
     public JSONObject adddynamicdesc(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
-        String leaveAMessage = (String) paramsMap.get("desc");
-        if (leaveAMessage != null && leaveAMessage != "") {
-            Map<String, Object> sendDesc = new HashMap<>();
-            sendDesc.put("userId", "oM78247bYUgo2bsq8ZUEAf_d-GLM");
-            sendDesc.put("desc", leaveAMessage);
-            sendDesc.put("time", "" + new Date().getTime());
-            //向数据库添加动态描述
-            Integer oneDesc = bsenDao.addDynamicDesc(sendDesc);
-            if (oneDesc == 1) {
-                response.put("code", "0000");
-                response.put("msg", "保存成功");
+
+        String uId = getUId(paramsMap);
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            String leaveAMessage = (String) paramsMap.get("desc");
+            if (leaveAMessage != null && leaveAMessage != "") {
+                Map<String, Object> sendDesc = new HashMap<>();
+                sendDesc.put("userId", uId);
+                sendDesc.put("desc", leaveAMessage);
+                sendDesc.put("time", "" + new Date().getTime());
+                //向数据库添加动态描述
+                Integer oneDesc = bsenDao.addDynamicDesc(sendDesc);
+                if (oneDesc == 1) {
+                    response.put("code", "0000");
+                    response.put("msg", "保存成功");
+                } else {
+                    response.put("code", "0001");
+                    response.put("msg", "保存失败");
+                }
             } else {
                 response.put("code", "0001");
                 response.put("msg", "保存失败");
             }
         } else {
             response.put("code", "0001");
-            response.put("msg", "保存失败");
+            response.put("msg", "该用户不存在");
         }
         return response;
     }
 
     @Override
     public JSONObject getDynamics(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
         JSONObject data = new JSONObject();
         //更新浏览量(传一个空的map对象占位
         boolean isTrue = (boolean) paramsMap.get("isTrue");
         if (isTrue) {
             bsenDao.updataDynamicsBrowseNum(paramsMap);
             String uId = getUId(paramsMap);
-            JSONObject response = new JSONObject();
             if (uId != null) {
                 paramsMap.remove("loginState");
                 paramsMap.put("uId", uId);
@@ -833,22 +1086,32 @@ public class BsenServiceImpl implements BsenService {
                 entity.setContentImgs(imgs);
             }
             data.put("dynamics", dynamics);
+            //封装返回数据
+            response.put("data", data);
+            response.put("code", "0000");
+            response.put("msg", "success");
         }
-        return data;
+        return response;
     }
 
     private String getUId(Map<String, Object> paramsMap) {
         String loginState = (String) paramsMap.get("loginState");
-        redisTemplate = getRedisTemplate();
-        String uId = (String) ((JSONObject) redisTemplate.opsForValue().get(loginState)).get("uId");
-        logger.info("redis数据库的用户uId: " + uId);
+        myRedisCache = getRedisTemplate();
+        JSONObject userObj = (JSONObject) myRedisCache.getObject(loginState);
+        String uId = null;
+        try {
+            uId = (String) userObj.get("uId");
+            logger.info("redis数据库获取openId值: "+uId);
+        }catch (NullPointerException e){
+            logger.error("redis数据库获取key值异常:",e);
+        }
         return uId;
     }
 
     private Order getDealingBytempOrderId(Map<String, Object> paramsMap) {
         String tempOrderId = (String) paramsMap.get("tempOrderId");
-        redisTemplate = getRedisTemplate();
-        Order order = (Order) redisTemplate.opsForValue().get(tempOrderId);
+        myRedisCache = getRedisTemplate();
+        Order order = (Order) myRedisCache.getObject(tempOrderId);
         logger.info("redis数据库正在参与交易的order: " + order);
         return order;
     }
@@ -879,5 +1142,4 @@ public class BsenServiceImpl implements BsenService {
         }
         return result;
     }
-
 }

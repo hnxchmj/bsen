@@ -46,6 +46,8 @@ logging:
 mybatis:
   type-aliases-package: com.nbcb.myron.bsen.dao
   mapper-locations: com/nbcb/myron/bsen/dao/BsenDao.xml
+  configuration:
+    cache-enabled: true
 
 
 

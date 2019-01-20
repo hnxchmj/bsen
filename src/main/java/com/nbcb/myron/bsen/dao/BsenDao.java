@@ -28,6 +28,8 @@ public interface BsenDao {
 
     List<ProductListEntity> getProductLists(Map<String,Object> params);
 
+    String selectProductSoldNum(Map<String,Object> params);
+
     List<ProductListEntity> getProductListsJgS(Map<String,Object> params);
 
     List<ProductListEntity> getProductListsJgJ(Map<String,Object> params);
@@ -90,5 +92,22 @@ public interface BsenDao {
 
     public Integer updateOrderInfo(Map<String,Object> paramsMap);
 
+    List<Order>  selectAllUserOrderlist(Map<String,Object> params);
+
+    List<Order>  selectOrderlist(Map<String,Object> params);
+
+    OrderInfo  adminSelectOrder(Map<String,Object> params);
+
+    OrderInfo  selectOrder(Map<String,Object> params);
+
+    Integer  selectUserOrderEvaluate(Map<String,Object> params);
+
+    Integer  updateOrderEvaluate(Map<String,Object> params);
+
+    Logistics  selecttransportCompany(Map<String,Object> params);
+
+    List<Logistics>  selectCompanyLikeName(Map<String,Object> params);
+
+    Integer  addOrderWuLiuInfo(Map<String,Object> params);
 
 }

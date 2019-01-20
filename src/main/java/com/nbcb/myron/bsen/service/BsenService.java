@@ -45,4 +45,16 @@ public interface BsenService {
     public Map<String,Object> prepayment(HttpServletRequest request,Map<String, Object> paramsMap);
 
     public JSONObject updateOrderInfo(Map<String, Object> paramsMap);
+
+    public JSONObject myOrderList(Map<String, Object> paramsMap);
+
+    public JSONObject myOrderInfo(Map<String, Object> paramsMap);
+
+    public JSONObject addOrderEvaluate(Map<String, Object> paramsMap);
+
+    public JSONObject looksGoodFlow(Map<String, Object> paramsMap);
+
+    public JSONObject searchFlowCompany(Map<String, Object> paramsMap);
+
+    public JSONObject addOrderWuLiuInfo(Map<String, Object> paramsMap);
 }

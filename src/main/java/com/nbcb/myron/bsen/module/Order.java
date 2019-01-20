@@ -5,12 +5,16 @@ import java.io.Serializable;
 public class Order implements Serializable {
     private static final long serialVersionUID = -1124817153226542900L;
     private Integer id;
-    private String  userId;
-    private String  pid;
-    private Integer  status;
-    private String  turnOver;
-    private String  price;
-    private String  time;
+    private String userId;
+    private String pid;
+    private Integer status;
+    private String turnOver;
+    private String imgUrl;
+    private String desc;
+    private String price;
+    private String time;
+    private String order_num;
+    private String evaluate;
 
     public Integer getId() {
         return id;
@@ -68,6 +72,38 @@ public class Order implements Serializable {
         this.time = time;
     }
 
+    public String getEvaluate() {
+        return evaluate;
+    }
+
+    public void setEvaluate(String evaluate) {
+        this.evaluate = evaluate;
+    }
+
+    public String getOrder_num() {
+        return order_num;
+    }
+
+    public void setOrder_num(String order_num) {
+        this.order_num = order_num;
+    }
+
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
@@ -76,8 +112,12 @@ public class Order implements Serializable {
                 ", pid='" + pid + '\'' +
                 ", status=" + status +
                 ", turnOver='" + turnOver + '\'' +
+                ", imgUrl='" + imgUrl + '\'' +
+                ", desc='" + desc + '\'' +
                 ", price='" + price + '\'' +
+                ", evaluate='" + evaluate + '\'' +
                 ", time='" + time + '\'' +
+                ", order_num='" + order_num + '\'' +
                 '}';
     }
 }

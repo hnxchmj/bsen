@@ -41,12 +41,7 @@ public class BsenController {
     @GetMapping("indexdata")
     public JSONObject getIndexData() {
         logger.info("##进入bsen获取首页数据##");
-        JSONObject response = new JSONObject();
-        JSONObject data = bsenService.getIndexData();
-        //查询结果数据封装
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+        JSONObject response = bsenService.getIndexData();
         logger.info("##response: " + response);
         return response;
     }
@@ -70,11 +65,7 @@ public class BsenController {
     @GetMapping("cutproductslist")
     public JSONObject getCutProductsList() {
         logger.info("##进入bsen获取全部砍价商品##");
-        JSONObject response = new JSONObject();
-        JSONObject data = bsenService.getCutProductsList();
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+        JSONObject response = bsenService.getCutProductsList();
         logger.info("##response: " + response);
         return response;
     }
@@ -82,11 +73,7 @@ public class BsenController {
     @GetMapping("searchproducts")
     public JSONObject getSearchProducts(String keyWord) {
         logger.info("##进入bsen搜索商品## 参数keyWord: " + keyWord);
-        JSONObject response = new JSONObject();
-        JSONObject data = bsenService.getSearchProducts(keyWord);
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+        JSONObject response = bsenService.getSearchProducts(keyWord);
         logger.info("##response: " + response);
         return response;
     }
@@ -94,12 +81,7 @@ public class BsenController {
     @PostMapping("dynamics")
     public JSONObject getDynamics(@RequestBody Map<String, Object> paramsMap) {
         logger.info("##进入bsen获取动态" + paramsMap);
-        JSONObject response = new JSONObject();
-        JSONObject data = bsenService.getDynamics(paramsMap);
-        //封装返回数据
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+        JSONObject response = bsenService.getDynamics(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
@@ -123,11 +105,7 @@ public class BsenController {
     @PostMapping("dynamicdetail")
     public JSONObject dynamicdetail(@RequestBody Map<String, Object> paramsMap) {
         logger.info("##进入bsen获取动态详情" + paramsMap);
-        JSONObject response = new JSONObject();
-        JSONObject data = bsenService.dynamicdetail(paramsMap);
-        response.put("data", data);
-        response.put("code", "0000");
-        response.put("msg", "success");
+        JSONObject response = bsenService.dynamicdetail(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
@@ -201,6 +179,63 @@ public class BsenController {
         logger.info("##更新订单状态: " + paramsMap);
         JSONObject response = bsenService.updateOrderInfo(paramsMap);
         logger.info("##response: " + response);
-        return null;
+        return response;
     }
+
+    @PostMapping("myorderlist")
+    public JSONObject myOrderList(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##我的订单列表: " + paramsMap);
+        JSONObject response = bsenService.myOrderList(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+
+    @PostMapping("myorderinfo")
+    public JSONObject myOrderInfo(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##我的订单详情: " + paramsMap);
+        JSONObject response = bsenService.myOrderInfo(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+    /**
+     * @date:2019/1/9
+    *@time:13:46
+    *@description:对已支付订单添加评论
+    */
+    @PostMapping("addorderevaluate")
+    public JSONObject addOrderEvaluate(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##对我的订单添加评价: " + paramsMap);
+        JSONObject response = bsenService.addOrderEvaluate(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+    /**
+     * @date:2019/1/10
+    *@time:15:22
+    *@description:查看订单物流
+    */
+    @PostMapping("looksgoodsflow")
+    public JSONObject looksGoodsFlow(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##查看物流信息: " + paramsMap);
+        JSONObject response = bsenService.looksGoodFlow(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+
+    @PostMapping("searchflowcompany")
+    public JSONObject searchFlowCompany(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##搜索物流公司信息: " + paramsMap);
+        JSONObject response = bsenService.searchFlowCompany(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+    @PostMapping("addorderwuliuinfo")
+    public JSONObject addOrderWuLiuInfo(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##添加物流公司信息: " + paramsMap);
+        JSONObject response = bsenService.addOrderWuLiuInfo(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+
+
 }
