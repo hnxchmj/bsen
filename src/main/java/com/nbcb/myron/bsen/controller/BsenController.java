@@ -2,6 +2,7 @@ package com.nbcb.myron.bsen.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.service.BsenService;
+import com.nbcb.myron.bsen.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.DigestException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -197,11 +200,12 @@ public class BsenController {
         logger.info("##response: " + response);
         return response;
     }
+
     /**
      * @date:2019/1/9
-    *@time:13:46
-    *@description:对已支付订单添加评论
-    */
+     * @time:13:46
+     * @description:对已支付订单添加评论
+     */
     @PostMapping("addorderevaluate")
     public JSONObject addOrderEvaluate(@RequestBody Map<String, Object> paramsMap) {
         logger.info("##对我的订单添加评价: " + paramsMap);
@@ -209,11 +213,12 @@ public class BsenController {
         logger.info("##response: " + response);
         return response;
     }
+
     /**
      * @date:2019/1/10
-    *@time:15:22
-    *@description:查看订单物流
-    */
+     * @time:15:22
+     * @description:查看订单物流
+     */
     @PostMapping("looksgoodsflow")
     public JSONObject looksGoodsFlow(@RequestBody Map<String, Object> paramsMap) {
         logger.info("##查看物流信息: " + paramsMap);
@@ -229,10 +234,30 @@ public class BsenController {
         logger.info("##response: " + response);
         return response;
     }
+
     @PostMapping("addorderwuliuinfo")
     public JSONObject addOrderWuLiuInfo(@RequestBody Map<String, Object> paramsMap) {
         logger.info("##添加物流公司信息: " + paramsMap);
         JSONObject response = bsenService.addOrderWuLiuInfo(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+
+    @PostMapping("bsenkfts")
+    public String bsenKFTS(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##小程序用户消息##" + paramsMap);
+        boolean response = bsenService.addUserMessage(paramsMap);
+        logger.info("##response: " + response);
+        if (response) {
+            return "success";
+        }
+        return null;
+    }
+
+    @PostMapping("chatlist")
+    public JSONObject chatList(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##小程序聊天列表##" + paramsMap);
+        JSONObject response = bsenService.chatList(paramsMap);
         logger.info("##response: " + response);
         return response;
     }

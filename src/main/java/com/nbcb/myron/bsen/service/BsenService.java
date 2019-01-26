@@ -57,4 +57,9 @@ public interface BsenService {
     public JSONObject searchFlowCompany(Map<String, Object> paramsMap);
 
     public JSONObject addOrderWuLiuInfo(Map<String, Object> paramsMap);
+    public boolean addUserMessage(Map<String, Object> paramsMap);
+
+    public JSONObject chatList(Map<String, Object> paramsMap);
+
+    public JSONObject replyUserMsg(Map<String, Object> paramsMap);
 }

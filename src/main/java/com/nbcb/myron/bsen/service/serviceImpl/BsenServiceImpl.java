@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
@@ -50,18 +49,12 @@ public class BsenServiceImpl implements BsenService {
     @Override
     public JSONObject register(Map<String, Object> paramsMap) {
 
-        //向微信接口校验
-        String code = (String) paramsMap.get("code");
         String nickName = (String) paramsMap.get("nickName");
         String avatarUrl = (String) paramsMap.get("avatarUrl");
         Integer gender = (Integer) paramsMap.get("gender");
 
-        String appid = "wx0cc8ab70b74f6211";
-        String secret = "be78809d3f2f4447ead9735a574cba85";
-        String url = "https://api.weixin.qq.com/sns/jscode2session";
-        String params = "appid=" + appid + "&secret=" + secret + "&js_code=" + code + "&grant_type=authorization_code";
-        String result = HttpRequest.sendGet(url, params);
-        JSONObject data = JSONObject.parseObject(result);
+        JSONObject data = getWxData(paramsMap);
+
         logger.info("微信返回数据data" + data);
         JSONObject response = new JSONObject();
 
@@ -217,12 +210,11 @@ public class BsenServiceImpl implements BsenService {
         if (uId != null) {
             paramsMap.remove("loginState");
             paramsMap.put("userId", uId);
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "该用户不存在");
+            return response;
         }
-//          else{
-//            response.put("code","0001");
-//            response.put("msg","该用户不存在");
-//            return response;
-//        }
         boolean isUpdateDz = (boolean) paramsMap.get("isUpdateDz");
         if (isUpdateDz) {//更新详情页点赞
             Integer isNum = null;
@@ -1014,6 +1006,77 @@ public class BsenServiceImpl implements BsenService {
     }
 
     @Override
+    public boolean addUserMessage(Map<String, Object> paramsMap) {
+        boolean isSuccess = false;
+        if (paramsMap.get("MsgId") != null) {
+            //查询消息是否存在
+            Integer isNum = bsenDao.selectMessageByMsgId(paramsMap);
+            if (isNum == 0) {
+                //不存在时,插入新消息
+                Integer count = bsenDao.addMessage(paramsMap);
+                if (count > 0) {
+                    //存入缓存48小时,消息处于可回复时间
+                    myRedisCache = getRedisTemplate();
+                    String FromUserName = (String) paramsMap.get("FromUserName");
+                    String MsgId = paramsMap.get("MsgId")+"";
+                    myRedisCache.putUserReplyChatExpiryTime(FromUserName, MsgId);//每个人的openid对应的消息id, 48小时失效
+                    isSuccess = true;
+                }
+            }
+        }
+        return isSuccess;
+    }
+
+    @Override
+    public JSONObject chatList(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        String uId = getUId(paramsMap);
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            paramsMap.put("uId", uId);
+            User user = bsenDao.selectUser(paramsMap);
+            if (user.getAuthority() == 0) {
+                List<Message> userMessageLists = bsenDao.selectMessageList(paramsMap);
+                Integer count = 0;
+                if (count > 0) {
+                    response.put("code", "0000");
+                    response.put("msg", "查询成功");
+                } else {
+                    response.put("code", "0001");
+                    response.put("msg", "查询失败");
+                }
+            } else {
+                response.put("code", "0001");
+                response.put("msg", "无权限");
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "用户不存在");
+        }
+        return response;
+    }
+
+    @Override
+    public JSONObject replyUserMsg(Map<String, Object> paramsMap) {
+
+        myRedisCache = getRedisTemplate();
+        String redisAccessToken = (String) myRedisCache.getObject("access_token");
+        if (redisAccessToken == null) {
+            //getAccessToken
+            JSONObject data = getAccessToken();
+            String access_token = (String) data.get("access_token");
+            String expires_in = (String) data.get("expires_in");
+            String errcode = (String) data.get("errcode");
+            String errmsg = (String) data.get("errmsg");
+            myRedisCache.putObjectTime("access_token", access_token);
+            redisAccessToken = (String) myRedisCache.getObject("access_token");
+        }
+        JSONObject wxResponse = sendCustomerMessage(redisAccessToken);
+
+        return wxResponse;
+    }
+
+    @Override
     public JSONObject adddynamicdesc(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
 
@@ -1053,9 +1116,9 @@ public class BsenServiceImpl implements BsenService {
         //更新浏览量(传一个空的map对象占位
         boolean isTrue = (boolean) paramsMap.get("isTrue");
         if (isTrue) {
-            bsenDao.updataDynamicsBrowseNum(paramsMap);
             String uId = getUId(paramsMap);
             if (uId != null) {
+                bsenDao.updataDynamicsBrowseNum(paramsMap);
                 paramsMap.remove("loginState");
                 paramsMap.put("uId", uId);
                 User user = bsenDao.selectUser(paramsMap);
@@ -1101,9 +1164,9 @@ public class BsenServiceImpl implements BsenService {
         String uId = null;
         try {
             uId = (String) userObj.get("uId");
-            logger.info("redis数据库获取openId值: "+uId);
-        }catch (NullPointerException e){
-            logger.error("redis数据库获取key值异常:",e);
+            logger.info("redis数据库获取openId值: " + uId);
+        } catch (NullPointerException e) {
+            logger.error("redis数据库获取key值异常:", e);
         }
         return uId;
     }
@@ -1141,5 +1204,50 @@ public class BsenServiceImpl implements BsenService {
             result.put("msg", "图片上传失败");
         }
         return result;
+    }
+
+    private JSONObject getWxData(Map<String, Object> paramsMap) {
+        //向微信接口校验
+        String code = (String) paramsMap.get("code");
+        String appid = "wx0cc8ab70b74f6211";
+        String secret = "be78809d3f2f4447ead9735a574cba85";
+        String url = "https://api.weixin.qq.com/sns/jscode2session";
+        String params = "appid=" + appid + "&secret=" + secret + "&js_code=" + code + "&grant_type=authorization_code";
+        String result = HttpRequest.sendGet(url, params);
+        JSONObject data = JSONObject.parseObject(result);
+        return data;
+    }
+
+    /**
+     * @date:2019/1/23
+     * @time:20:04
+     * @description:获取accessToken
+     */
+    private JSONObject getAccessToken() {
+        String appid = "wx0cc8ab70b74f6211";
+        String secret = "be78809d3f2f4447ead9735a574cba85";
+        String url = "https://api.weixin.qq.com/cgi-bin/token";
+        String params = "grant_type=client_credential&appid=" + appid + "&secret=" + secret;
+        String result = HttpRequest.sendGet(url, params);
+        JSONObject data = JSONObject.parseObject(result);
+        return data;
+    }
+
+    /**
+     * @date:2019/1/23
+     * @time:20:04
+     * @description:发送客服消息给用户
+     */
+    private JSONObject sendCustomerMessage(String accessToken) {
+        String url = "https://api.weixin.qq.com/cgi-bin/message/custom/send";
+        String params = "access_token=" + accessToken;
+        String result = HttpRequest.sendPost(url, params);
+        JSONObject data = JSONObject.parseObject(result);
+        return data;
+    }
+
+    public static void main(String[] args) {
+        BsenServiceImpl a = new BsenServiceImpl();
+        System.out.print(a.getAccessToken());
     }
 }

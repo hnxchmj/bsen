@@ -667,4 +667,49 @@
         WHERE 0 = #{uId}
             AND i.id = #{id};
     </update>
+
+    <select id="selectMessageByMsgId" resultType="java.lang.Integer" useCache="false">
+        SELECT
+          COUNT(*)
+        FROM message_tab i
+        WHERE i.msgId =#{MsgId};
+    </select>
+
+    <insert id="addMessage">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID();
+        </selectKey>
+        INSERT INTO message_tab
+        (toUserName,uId,message,messageType,createdTime,msgId)
+        VALUES
+        (#{ToUserName},#{FromUserName},#{Content},#{MsgType},#{CreateTime},#{MsgId});
+    </insert>
+
+    <select id="selectMessageList" resultMap="messageList" useCache="false">
+        SELECT
+          j.uid,
+          j.nickname,
+          j.path,
+        FROM users j
+        WHERE j.isSession = '1';
+    </select>
+
+    <resultMap id="messageList" type="com.nbcb.myron.bsen.module.UserMessage">
+        <id property="id" column="uid"/>
+        <result property="nickName" column="nickname"/>
+        <result property="headImgPath" column="path"/>
+        <collection property="messages" ofType="com.nbcb.myron.bsen.module.Message" column="{uId=uId}"
+                    select="getUserMessage"></collection>
+    </resultMap>
+
+    <select id="getUserMessage" resultType="com.nbcb.myron.bsen.module.Message" useCache="false">
+      SELECT
+          i.message content,
+          i.isReaded,
+          FROM_UNIXTIME(i.createdTime/1000,'%Y-%m-%d %H:%i:%s') createTime
+        FROM (SELECT * FROM message_tab i order by i.createTime DESC) j
+        WHERE j.uid =#{uId}
+        GROUP BY j.createdTime DESC;
+    </select>
+
 </mapper>

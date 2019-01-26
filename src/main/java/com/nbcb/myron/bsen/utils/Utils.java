@@ -2,7 +2,6 @@ package com.nbcb.myron.bsen.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.common.MD5;
-import com.nbcb.myron.bsen.module.User;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +10,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -77,48 +76,6 @@ public class Utils {
 
         return map;
     }
-
-
-    /*
-    *微信用户校验
-     */
-    public static void putSession(User u) {
-//        BeanManager.getSpyMemcachedClient().set(wxSessionkey,  3*24*3600,u.getOpenid()+","+u.getSession_key());//设置memcache缓存
-    }
-
-
-    /**
-     * 得到3rd_session登录效验(key)
-     * @return
-     */
-    public static String get3rdSession(){
-        return exec("head -n 80 /dev/urandom | tr -dc A-Za-z0-9 | head -c 168");
-    }
-
-
-    /**
-     * linux中执行命令
-     * @param cmd
-     * @return
-     */
-    private static String exec(String cmd) {
-        StringBuffer sb = new StringBuffer();
-        try {
-            String[] cmdA = { "/bin/sh", "-c", cmd };
-            Process process = Runtime.getRuntime().exec(cmdA);
-            LineNumberReader br = new LineNumberReader(new InputStreamReader(
-                    process.getInputStream()));
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-        } catch (Exception e) {
-            //如果本地测试，会报空指针异常，所以为了不让报错，索性返回有值即可
-            sb.append(wxSessionkey);
-        }
-        return sb.toString();
-    }
-
     /**
      * 针对微信支付生成商户订单号，为了避免微信商户订单号重复（下单单位支付），
      * @return
@@ -225,5 +182,57 @@ public class Utils {
             return null;
         }
         return buff;
+    }
+
+    /**
+     * 方法名：checkSignature</br>
+     * 详述：验证签名</br>
+     * @param signature
+     * @param timestamp
+     * @param nonce
+     * @return
+     * @throws
+     */
+    public static boolean checkSignature(String signature, String timestamp,
+                                         String nonce,String token) {
+        // 1.将token、timestamp、nonce三个参数进行字典序排序
+        String[] arr = new String[] { token, timestamp, nonce };
+        Arrays.sort(arr);
+        // 2. 将三个参数字符串拼接成一个字符串进行sha1加密
+        StringBuilder content = new StringBuilder();
+        for (int i = 0; i < arr.length; i++) {
+            content.append(arr[i]);
+        }
+        MessageDigest md = null;
+        String tmpStr = null;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+            // 将三个参数字符串拼接成一个字符串进行sha1加密
+            byte[] digest = md.digest(content.toString().getBytes());
+            tmpStr = byteToStr(digest);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        content = null;
+        // 3.将sha1加密后的字符串可与signature对比，标识该请求来源于微信
+        return tmpStr != null ? tmpStr.equals(signature.toUpperCase()) : false;
+    }
+
+    private static String byteToStr(byte[] byteArray) {
+        StringBuilder strDigest = new StringBuilder();
+        for (int i = 0; i < byteArray.length; i++) {
+            strDigest.append(byteToHexStr(byteArray[i]));
+        }
+        return strDigest.toString();
+    }
+
+    private static String byteToHexStr(byte mByte) {
+        char[] Digit = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',
+                'B', 'C', 'D', 'E', 'F' };
+        char[] tempArr = new char[2];
+        tempArr[0] = Digit[(mByte >>> 4) & 0X0F];
+        tempArr[1] = Digit[mByte & 0X0F];
+        String s = new String(tempArr);
+        return s;
     }
 }

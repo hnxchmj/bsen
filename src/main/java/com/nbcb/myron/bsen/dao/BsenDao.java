@@ -110,4 +110,10 @@ public interface BsenDao {
 
     Integer  addOrderWuLiuInfo(Map<String,Object> params);
 
+    Integer  selectMessageByMsgId(Map<String,Object> params);
+
+    List<Message>  selectMessageList(Map<String,Object> params);
+
+    Integer  addMessage(Map<String,Object> params);
+
 }
