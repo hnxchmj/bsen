@@ -112,8 +112,9 @@ public interface BsenDao {
 
     Integer  selectMessageByMsgId(Map<String,Object> params);
 
-    List<Message>  selectMessageList(Map<String,Object> params);
+    List<UserMessage>  selectMessageList(Map<String,Object> params);
 
     Integer  addMessage(Map<String,Object> params);
 
+    Integer  updateUserIsSession(Map<String,Object> params);
 }

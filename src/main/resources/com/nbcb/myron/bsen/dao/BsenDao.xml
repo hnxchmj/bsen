@@ -685,22 +685,24 @@
         (#{ToUserName},#{FromUserName},#{Content},#{MsgType},#{CreateTime},#{MsgId});
     </insert>
 
-    <select id="selectMessageList" resultMap="messageList" useCache="false">
+    <select id="selectMessageList" resultType="com.nbcb.myron.bsen.module.UserMessage" useCache="false">
         SELECT
-          j.uid,
-          j.nickname,
-          j.path,
+          j.uid         uId,
+          j.nickname    nickName,
+          j.path        headImgPath,
+          i.message     content,
+          i.isReaded,
+          FROM_UNIXTIME(i.createdTime,'%Y-%m-%d %H:%i:%s') createTime
         FROM users j
-        WHERE j.isSession = '1';
+          LEFT JOIN message_tab i
+            ON j.uid = i.uId
+              AND i.id = (SELECT
+                            MAX(k.id)
+                          FROM message_tab k
+                          WHERE j.uid= k.uId)
+        WHERE j.isSession = '1'
+        LIMIT #{page},#{offset};
     </select>
-
-    <resultMap id="messageList" type="com.nbcb.myron.bsen.module.UserMessage">
-        <id property="id" column="uid"/>
-        <result property="nickName" column="nickname"/>
-        <result property="headImgPath" column="path"/>
-        <collection property="messages" ofType="com.nbcb.myron.bsen.module.Message" column="{uId=uId}"
-                    select="getUserMessage"></collection>
-    </resultMap>
 
     <select id="getUserMessage" resultType="com.nbcb.myron.bsen.module.Message" useCache="false">
       SELECT
@@ -709,7 +711,15 @@
           FROM_UNIXTIME(i.createdTime/1000,'%Y-%m-%d %H:%i:%s') createTime
         FROM (SELECT * FROM message_tab i order by i.createTime DESC) j
         WHERE j.uid =#{uId}
-        GROUP BY j.createdTime DESC;
+        GROUP BY j.createdTime DESC
+        LIMIT #{page},#{offset};
     </select>
+
+    <update id="updateUserIsSession">
+        UPDATE users i
+        SET
+        i.isSession = '1'
+        where i.uid =#{FromUserName}
+    </update>
 
 </mapper>

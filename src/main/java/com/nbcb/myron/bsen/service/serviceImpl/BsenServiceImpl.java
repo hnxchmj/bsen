@@ -1009,6 +1009,8 @@ public class BsenServiceImpl implements BsenService {
     public boolean addUserMessage(Map<String, Object> paramsMap) {
         boolean isSuccess = false;
         if (paramsMap.get("MsgId") != null) {
+            //更新用户会话状态:0-没有;1-有.
+            bsenDao.updateUserIsSession(paramsMap);
             //查询消息是否存在
             Integer isNum = bsenDao.selectMessageByMsgId(paramsMap);
             if (isNum == 0) {
@@ -1018,7 +1020,7 @@ public class BsenServiceImpl implements BsenService {
                     //存入缓存48小时,消息处于可回复时间
                     myRedisCache = getRedisTemplate();
                     String FromUserName = (String) paramsMap.get("FromUserName");
-                    String MsgId = paramsMap.get("MsgId")+"";
+                    String MsgId = paramsMap.get("MsgId") + "";
                     myRedisCache.putUserReplyChatExpiryTime(FromUserName, MsgId);//每个人的openid对应的消息id, 48小时失效
                     isSuccess = true;
                 }
@@ -1036,15 +1038,13 @@ public class BsenServiceImpl implements BsenService {
             paramsMap.put("uId", uId);
             User user = bsenDao.selectUser(paramsMap);
             if (user.getAuthority() == 0) {
-                List<Message> userMessageLists = bsenDao.selectMessageList(paramsMap);
-                Integer count = 0;
-                if (count > 0) {
-                    response.put("code", "0000");
-                    response.put("msg", "查询成功");
-                } else {
-                    response.put("code", "0001");
-                    response.put("msg", "查询失败");
-                }
+                paramsMap.remove("uId");
+                List<UserMessage> usersMessagesList = bsenDao.selectMessageList(paramsMap);
+                JSONObject data = new JSONObject();
+                data.put("usersMessagesList",usersMessagesList);
+                response.put("data", data);
+                response.put("code", "0000");
+                response.put("msg", "查询成功");
             } else {
                 response.put("code", "0001");
                 response.put("msg", "无权限");

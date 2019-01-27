@@ -10,17 +10,15 @@ import java.util.List;
  */
 public class UserMessage  implements Serializable {
     private static final long serialVersionUID = -828060829170717297L;
-    private Integer id;
+    private String uId;
     private String nickName;
     private String headImgPath;
-    private List<Message> messages;
+    private String content;
+    private String isReaded;
+    private String createTime;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
+    public void setuId(String uId) {
+        this.uId = uId;
     }
 
     public String getNickName() {
@@ -39,11 +37,27 @@ public class UserMessage  implements Serializable {
         this.headImgPath = headImgPath;
     }
 
-    public List<Message> getMessages() {
-        return messages;
+    public String getContent() {
+        return content;
     }
 
-    public void setMessages(List<Message> messages) {
-        this.messages = messages;
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getIsReaded() {
+        return isReaded;
+    }
+
+    public void setIsReaded(String isReaded) {
+        this.isReaded = isReaded;
+    }
+
+    public String getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
     }
 }
