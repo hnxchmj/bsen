@@ -9,9 +9,19 @@ import java.io.Serializable;
  */
 public class Message implements Serializable {
     private static final long serialVersionUID = -6107886130999231868L;
+
+    private String sessionID;//会话Id;记录谁对谁的消息
     private String content;
     private String createTime;
     private String isReaded;
+
+    public String getSessionID() {
+        return sessionID;
+    }
+
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
+    }
 
     public String getContent() {
         return content;

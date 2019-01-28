@@ -262,5 +262,13 @@ public class BsenController {
         return response;
     }
 
+    @PostMapping("chatdetail")
+    public JSONObject chatDetail(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##小程序聊天详情##" + paramsMap);
+        JSONObject response = bsenService.chatDetail(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+
 
 }

@@ -21,6 +21,10 @@ public class UserMessage  implements Serializable {
         this.uId = uId;
     }
 
+    public String getuId() {
+        return uId;
+    }
+
     public String getNickName() {
         return nickName;
     }

@@ -692,20 +692,26 @@
           j.path        headImgPath,
           i.message     content,
           i.isReaded,
-          FROM_UNIXTIME(i.createdTime,'%Y-%m-%d %H:%i:%s') createTime
-        FROM users j
+          FROM_UNIXTIME(i.createdTime,'%Y-%m-%d %H:%i:%s')    createTime
+        FROM (SELECT
+                u.*,
+                CONCAT(u.uid,"TOoFmnm5dqDVYCcX3RJKXjSlVdqyHw")    sessionId,
+                CONCAT("oFmnm5dqDVYCcX3RJKXjSlVdqyHwTO",u.uid)    adminSessionId
+              FROM users u) j
           LEFT JOIN message_tab i
-            ON j.uid = i.uId
+            ON (j.sessionId = i.uId
+                OR j.adminSessionId = i.uId)
               AND i.id = (SELECT
                             MAX(k.id)
                           FROM message_tab k
-                          WHERE j.uid= k.uId)
-        WHERE j.isSession = '1'
+                          WHERE (j.sessionId = k.uId OR j.adminSessionId = k.uId))
+        WHERE j.isSession = '1' AND j.authority !=0
         LIMIT #{page},#{offset};
     </select>
 
     <select id="getUserMessage" resultType="com.nbcb.myron.bsen.module.Message" useCache="false">
       SELECT
+          i.uId sessionID,
           i.message content,
           i.isReaded,
           FROM_UNIXTIME(i.createdTime/1000,'%Y-%m-%d %H:%i:%s') createTime

@@ -61,5 +61,7 @@ public interface BsenService {
 
     public JSONObject chatList(Map<String, Object> paramsMap);
 
+    public JSONObject chatDetail(Map<String, Object> paramsMap);
+
     public JSONObject replyUserMsg(Map<String, Object> paramsMap);
 }

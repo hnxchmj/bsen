@@ -1015,6 +1015,8 @@ public class BsenServiceImpl implements BsenService {
             Integer isNum = bsenDao.selectMessageByMsgId(paramsMap);
             if (isNum == 0) {
                 //不存在时,插入新消息
+                String FromUserNameToAdmin = paramsMap.get("FromUserName")+"TO"+"oFmnm5dqDVYCcX3RJKXjSlVdqyHw";//用户TO客服发消息
+                paramsMap.put("FromUserName",FromUserNameToAdmin);
                 Integer count = bsenDao.addMessage(paramsMap);
                 if (count > 0) {
                     //存入缓存48小时,消息处于可回复时间
@@ -1042,6 +1044,32 @@ public class BsenServiceImpl implements BsenService {
                 List<UserMessage> usersMessagesList = bsenDao.selectMessageList(paramsMap);
                 JSONObject data = new JSONObject();
                 data.put("usersMessagesList",usersMessagesList);
+                response.put("data", data);
+                response.put("code", "0000");
+                response.put("msg", "查询成功");
+            } else {
+                response.put("code", "0001");
+                response.put("msg", "无权限");
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", "用户不存在");
+        }
+        return response;
+    }
+    @Override
+    public JSONObject chatDetail(Map<String, Object> paramsMap) {
+        JSONObject response = new JSONObject();
+        String uId = getUId(paramsMap);
+        if (uId != null) {
+            paramsMap.remove("loginState");
+            paramsMap.put("uId", uId);
+            User user = bsenDao.selectUser(paramsMap);
+            if (user.getAuthority() == 0) {
+                paramsMap.remove("uId");
+                List<Message> usersMessagesDetailList = bsenDao.getUserMessage(paramsMap);
+                JSONObject data = new JSONObject();
+                data.put("usersMessagesDetailList",usersMessagesDetailList);
                 response.put("data", data);
                 response.put("code", "0000");
                 response.put("msg", "查询成功");
