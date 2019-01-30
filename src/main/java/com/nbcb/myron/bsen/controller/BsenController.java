@@ -2,6 +2,7 @@ package com.nbcb.myron.bsen.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.service.BsenService;
+import com.nbcb.myron.bsen.service.serviceImpl.BsenServiceImpl;
 import com.nbcb.myron.bsen.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -270,5 +271,23 @@ public class BsenController {
         return response;
     }
 
+    @PostMapping("replyusermsg")
+    public JSONObject replayUser(@RequestBody Map<String, Object> paramsMap) {
+        logger.info("##小程序回复聊天##" + paramsMap);
+        JSONObject response = bsenService.replyUserMsg(paramsMap);
+        logger.info("##response: " + response);
+        return response;
+    }
+
+    public static void main(String[] args) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("\'content\'","{\'content\':\'阿斯蒂芬\'}");
+        map.put("\'date\'",1548826871);
+        map.put("\'type\'","\'text\'");
+        map.put("\'uId\'","\'oFmnm5dqDVYCcX3RJKXjSlVdqyHw\'");
+
+        System.out.println(JSONObject.parseObject(map.toString().replace("=",":")));
+
+    }
 
 }

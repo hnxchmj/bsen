@@ -711,12 +711,15 @@
 
     <select id="getUserMessage" resultType="com.nbcb.myron.bsen.module.Message" useCache="false">
       SELECT
-          i.uId sessionID,
-          i.message content,
-          i.isReaded,
-          FROM_UNIXTIME(i.createdTime/1000,'%Y-%m-%d %H:%i:%s') createTime
-        FROM (SELECT * FROM message_tab i order by i.createTime DESC) j
-        WHERE j.uid =#{uId}
+          j.id,
+          j.uId sessionID,
+          j.message content,
+          j.messageType type,
+          j.isReaded,
+          j.msgId,
+          FROM_UNIXTIME(j.createdTime,'%Y-%m-%d %H:%i:%s') createdTime
+        FROM (SELECT * FROM message_tab i order by i.createdTime DESC) j
+        WHERE (j.uId =#{userToAdmin} OR j.uId =#{adminToUser})
         GROUP BY j.createdTime DESC
         LIMIT #{page},#{offset};
     </select>

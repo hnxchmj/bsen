@@ -1066,10 +1066,36 @@ public class BsenServiceImpl implements BsenService {
             paramsMap.put("uId", uId);
             User user = bsenDao.selectUser(paramsMap);
             if (user.getAuthority() == 0) {
+                String userToAdmin = paramsMap.get("userUId")+"TO"+uId;
+                String adminToUser = uId+"TO"+paramsMap.get("userUId");
                 paramsMap.remove("uId");
+                paramsMap.put("userToAdmin", userToAdmin);
+                paramsMap.put("adminToUser", adminToUser);
                 List<Message> usersMessagesDetailList = bsenDao.getUserMessage(paramsMap);
                 JSONObject data = new JSONObject();
-                data.put("usersMessagesDetailList",usersMessagesDetailList);
+                Iterator it = usersMessagesDetailList.iterator();
+                List<MessageDetail> messageLists = new ArrayList<>();
+                while (it.hasNext()) {
+                    Message entity = (Message) it.next();
+                    String sessionID = entity.getSessionID();
+                    String openID = sessionID.substring(0,sessionID.indexOf("TO"));
+                    Map<String, Object> param = new HashMap<>();
+                    param.put("uId",openID);
+                    User messageUserInfo = bsenDao.selectUser(param);
+                    MessageDetail messageDetail = new MessageDetail();
+                    messageDetail.setId(entity.getId());
+                    messageDetail.setMsgId(entity.getMsgId());
+                    messageDetail.setuId(openID);
+                    messageDetail.setNickName(messageUserInfo.getNickName());
+                    messageDetail.setHeadImgPath(messageUserInfo.getAvatarUrl());
+                    messageDetail.setContent(entity.getContent());
+                    messageDetail.setCreateTime(entity.getCreatedTime());
+                    messageDetail.setType(entity.getType());
+                    messageDetail.setIsReaded(entity.getIsReaded());
+                    messageLists.add(messageDetail);
+                }
+                data.put("usersMessagesDetailList",messageLists);
+                data.put("selfId",uId);
                 response.put("data", data);
                 response.put("code", "0000");
                 response.put("msg", "查询成功");
@@ -1086,21 +1112,36 @@ public class BsenServiceImpl implements BsenService {
 
     @Override
     public JSONObject replyUserMsg(Map<String, Object> paramsMap) {
-
+        JSONObject response = new JSONObject();
         myRedisCache = getRedisTemplate();
         String redisAccessToken = (String) myRedisCache.getObject("access_token");
         if (redisAccessToken == null) {
             //getAccessToken
             JSONObject data = getAccessToken();
-            String access_token = (String) data.get("access_token");
-            String expires_in = (String) data.get("expires_in");
-            String errcode = (String) data.get("errcode");
-            String errmsg = (String) data.get("errmsg");
-            myRedisCache.putObjectTime("access_token", access_token);
-            redisAccessToken = (String) myRedisCache.getObject("access_token");
+            Integer errcode =  (Integer) data.get("errcode");
+            if (errcode == null || errcode == 0){
+                String access_token = (String) data.get("access_token");
+                Integer expires_in =  (Integer) data.get("expires_in");
+                myRedisCache.putObjectTime("access_token", access_token,expires_in);
+                redisAccessToken = (String) myRedisCache.getObject("access_token");
+            }else{
+                String errmsg =  (String) data.get("errmsg");
+                response.put("code","0001");
+                response.put("msg",errmsg);
+                return response;
+            }
         }
-        JSONObject wxResponse = sendCustomerMessage(redisAccessToken);
-
+        Map<String, Object> sendMap = new HashMap<>();
+        String touser = "\'"+paramsMap.get("toUser")+"\'";
+        sendMap.put("\'touser\'",touser);
+        //文本消息
+        if ("text".equals(paramsMap.get("type"))){
+            String type = "\'"+paramsMap.get("type")+"\'";
+            sendMap.put("\'msgtype\'",type);
+            String content = "{\'content\':\'"+paramsMap.get("content")+"\'}";
+            sendMap.put("\'text\'",content);
+        }
+        JSONObject wxResponse = sendCustomerMessage(redisAccessToken,sendMap);
         return wxResponse;
     }
 
@@ -1258,6 +1299,7 @@ public class BsenServiceImpl implements BsenService {
         String params = "grant_type=client_credential&appid=" + appid + "&secret=" + secret;
         String result = HttpRequest.sendGet(url, params);
         JSONObject data = JSONObject.parseObject(result);
+        logger.info("redis缓存失效后重新获取小程序全局唯一后台接口调用凭据: "+data);
         return data;
     }
 
@@ -1266,16 +1308,23 @@ public class BsenServiceImpl implements BsenService {
      * @time:20:04
      * @description:发送客服消息给用户
      */
-    private JSONObject sendCustomerMessage(String accessToken) {
-        String url = "https://api.weixin.qq.com/cgi-bin/message/custom/send";
-        String params = "access_token=" + accessToken;
-        String result = HttpRequest.sendPost(url, params);
+    private JSONObject sendCustomerMessage(String accessToken,Map<String,Object> jsonMap) {
+        String url = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=" + accessToken;
+        JSONObject params = JSONObject.parseObject(jsonMap.toString().replace("=",":"));
+        String result = HttpRequest.sendPost(url, params.toJSONString());
         JSONObject data = JSONObject.parseObject(result);
         return data;
     }
 
     public static void main(String[] args) {
         BsenServiceImpl a = new BsenServiceImpl();
-        System.out.print(a.getAccessToken());
+        Map<String, Object> map = new HashMap<>();
+        map.put("\'touser\'","\'oFmnm5S2acq0y7METZzQKJwXSltc\'");
+        map.put("\'msgtype\'","\'text\'");
+        map.put("\'text\'","{\'content\':\'发这些干什么?\'}");
+//        System.out.print(a.getAccessToken());
+        String token = "18_QD8JRwpYAEKDpld4TriwhhXqnqG7adjdhhc23U3NYRkyHJsdKsrayzDlGYkVvitQ6I8TX4Vk4eJEOAZt0LNy3yQpxJ8FAVQJbmeIPNAKVkDkXT_mOlMnvo3HoxwRSIdAEAMND";
+        JSONObject response = a.sendCustomerMessage(token,map);
+        System.out.print(response);
     }
 }

@@ -10,10 +10,21 @@ import java.io.Serializable;
 public class Message implements Serializable {
     private static final long serialVersionUID = -6107886130999231868L;
 
+    private Integer id;//消息表id
     private String sessionID;//会话Id;记录谁对谁的消息
     private String content;
-    private String createTime;
+    private String createdTime;
+    private String type;
     private String isReaded;
+    private String msgId;//消息id 可用于排重
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getSessionID() {
         return sessionID;
@@ -31,12 +42,20 @@ public class Message implements Serializable {
         this.content = content;
     }
 
-    public String getCreateTime() {
-        return createTime;
+    public String getCreatedTime() {
+        return createdTime;
     }
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
+    public void setCreatedTime(String createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getIsReaded() {
@@ -45,5 +64,13 @@ public class Message implements Serializable {
 
     public void setIsReaded(String isReaded) {
         this.isReaded = isReaded;
+    }
+
+    public String getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(String msgId) {
+        this.msgId = msgId;
     }
 }
