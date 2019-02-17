@@ -29,7 +29,6 @@ public class BsenServiceImpl implements BsenService {
     private final Logger logger = LoggerFactory.getLogger(BsenServiceImpl.class);
 
     private MyRedisCache myRedisCache;
-    private static final long EXPIRE_TIME_IN_MINUTES = 60; // redis过期时间
     private String httpStr;
 
     @Autowired
@@ -615,7 +614,7 @@ public class BsenServiceImpl implements BsenService {
     }
 
     @Override
-    public JSONObject myinfo(Map<String, Object> paramsMap) {
+    public JSONObject myInfo(Map<String, Object> paramsMap) {
         String uId = getUId(paramsMap);
         JSONObject response = new JSONObject();
         if (uId != null) {
@@ -623,6 +622,28 @@ public class BsenServiceImpl implements BsenService {
             paramsMap.put("uId", uId);
             User user = bsenDao.selectUser(paramsMap);
             if (user != null) {
+                //如果是管理员查询是否有待处理事件(待处理订单或者待回复消息)
+                if (user.getAuthority() == 0) {
+                    //查询需要回复的消息数
+                    Integer msgNum = bsenDao.selectToDoReplyMsgCount();
+                    logger.info("待回复消息数msgNum: " + msgNum);
+                    //查询需要发货的订单数
+                    Integer orderNum = bsenDao.selectToDoOrderCount();
+                    logger.info("待发货订单数orderNum: " + orderNum);
+                    if (msgNum > 0) {
+                        user.setToDoMsgFlag("true");
+                    } else {
+                        user.setToDoMsgFlag("false");
+                    }
+                    if (orderNum > 0) {
+                        user.setToDoOrderFlag("true");
+                    } else {
+                        user.setToDoOrderFlag("false");
+                    }
+                } else {
+                    user.setToDoMsgFlag("false");
+                    user.setToDoOrderFlag("false");
+                }
                 JSONObject data = new JSONObject();
                 data.put("userInfo", user);
                 response.put("data", data);
@@ -658,6 +679,7 @@ public class BsenServiceImpl implements BsenService {
         paramsWxMap.put("body", "佰森门业" + "-" + out_trade_no);//商品描述
 
         String amountMoney = (String) paramsMap.get("amountMoney");
+        amountMoney = Double.valueOf(amountMoney).intValue()*100+"";
         paramsWxMap.put("total_fee", amountMoney);//标价金额
 
         String spbill_create_ip = Utils.getIpAddress(request);
@@ -682,6 +704,7 @@ public class BsenServiceImpl implements BsenService {
         String xmlParamsStr = XmlUtil.encode(paramsWxMap);
 
         String result = HttpRequest.sendPost(url, xmlParamsStr);
+        logger.info("返回result: " + result);
         Document emlemet = null;
         try {
             emlemet = DocumentHelper.parseText(result);
@@ -1015,8 +1038,10 @@ public class BsenServiceImpl implements BsenService {
             Integer isNum = bsenDao.selectMessageByMsgId(paramsMap);
             if (isNum == 0) {
                 //不存在时,插入新消息
-                String FromUserNameToAdmin = paramsMap.get("FromUserName")+"TO"+"oFmnm5dqDVYCcX3RJKXjSlVdqyHw";//用户TO客服发消息
-                paramsMap.put("FromUserName",FromUserNameToAdmin);
+                String FromUserNameToAdmin = paramsMap.get("FromUserName") + "TO" + "oFmnm5dqDVYCcX3RJKXjSlVdqyHw";//用户TO客服发消息
+                paramsMap.put("FromUserName", FromUserNameToAdmin);
+                String isReaded = "1";//消息状态:0-已读;1-未读
+                paramsMap.put("isReaded", isReaded);
                 Integer count = bsenDao.addMessage(paramsMap);
                 if (count > 0) {
                     //存入缓存48小时,消息处于可回复时间
@@ -1043,7 +1068,7 @@ public class BsenServiceImpl implements BsenService {
                 paramsMap.remove("uId");
                 List<UserMessage> usersMessagesList = bsenDao.selectMessageList(paramsMap);
                 JSONObject data = new JSONObject();
-                data.put("usersMessagesList",usersMessagesList);
+                data.put("usersMessagesList", usersMessagesList);
                 response.put("data", data);
                 response.put("code", "0000");
                 response.put("msg", "查询成功");
@@ -1057,6 +1082,7 @@ public class BsenServiceImpl implements BsenService {
         }
         return response;
     }
+
     @Override
     public JSONObject chatDetail(Map<String, Object> paramsMap) {
         JSONObject response = new JSONObject();
@@ -1066,8 +1092,8 @@ public class BsenServiceImpl implements BsenService {
             paramsMap.put("uId", uId);
             User user = bsenDao.selectUser(paramsMap);
             if (user.getAuthority() == 0) {
-                String userToAdmin = paramsMap.get("userUId")+"TO"+uId;
-                String adminToUser = uId+"TO"+paramsMap.get("userUId");
+                String userToAdmin = paramsMap.get("userUId") + "TO" + uId;
+                String adminToUser = uId + "TO" + paramsMap.get("userUId");
                 paramsMap.remove("uId");
                 paramsMap.put("userToAdmin", userToAdmin);
                 paramsMap.put("adminToUser", adminToUser);
@@ -1078,9 +1104,9 @@ public class BsenServiceImpl implements BsenService {
                 while (it.hasNext()) {
                     Message entity = (Message) it.next();
                     String sessionID = entity.getSessionID();
-                    String openID = sessionID.substring(0,sessionID.indexOf("TO"));
+                    String openID = sessionID.substring(0, sessionID.indexOf("TO"));
                     Map<String, Object> param = new HashMap<>();
-                    param.put("uId",openID);
+                    param.put("uId", openID);
                     User messageUserInfo = bsenDao.selectUser(param);
                     MessageDetail messageDetail = new MessageDetail();
                     messageDetail.setId(entity.getId());
@@ -1094,11 +1120,13 @@ public class BsenServiceImpl implements BsenService {
                     messageDetail.setIsReaded(entity.getIsReaded());
                     messageLists.add(messageDetail);
                 }
-                data.put("usersMessagesDetailList",messageLists);
-                data.put("selfId",uId);
+                data.put("usersMessagesDetailList", messageLists);
+                data.put("selfId", uId);
                 response.put("data", data);
                 response.put("code", "0000");
                 response.put("msg", "查询成功");
+                //更新聊天信息状态为已读
+                bsenDao.updateMsgStatus(paramsMap);
             } else {
                 response.put("code", "0001");
                 response.put("msg", "无权限");
@@ -1118,31 +1146,68 @@ public class BsenServiceImpl implements BsenService {
         if (redisAccessToken == null) {
             //getAccessToken
             JSONObject data = getAccessToken();
-            Integer errcode =  (Integer) data.get("errcode");
-            if (errcode == null || errcode == 0){
+            Integer errcode = (Integer) data.get("errcode");
+            if (errcode == null || errcode == 0) {
                 String access_token = (String) data.get("access_token");
-                Integer expires_in =  (Integer) data.get("expires_in");
-                myRedisCache.putObjectTime("access_token", access_token,expires_in);
+                Integer expires_in = (Integer) data.get("expires_in");
+                myRedisCache.putObjectTime("access_token", access_token, expires_in);
                 redisAccessToken = (String) myRedisCache.getObject("access_token");
-            }else{
-                String errmsg =  (String) data.get("errmsg");
-                response.put("code","0001");
-                response.put("msg",errmsg);
+            } else {
+                String errmsg = (String) data.get("errmsg");
+                response.put("code", "0001");
+                response.put("msg", errmsg);
                 return response;
             }
         }
         Map<String, Object> sendMap = new HashMap<>();
-        String touser = "\'"+paramsMap.get("toUser")+"\'";
-        sendMap.put("\'touser\'",touser);
+        String touser = "\'" + paramsMap.get("toUser") + "\'";
+        sendMap.put("\'touser\'", touser);
         //文本消息
-        if ("text".equals(paramsMap.get("type"))){
-            String type = "\'"+paramsMap.get("type")+"\'";
-            sendMap.put("\'msgtype\'",type);
-            String content = "{\'content\':\'"+paramsMap.get("content")+"\'}";
-            sendMap.put("\'text\'",content);
+        if ("text".equals(paramsMap.get("type"))) {
+            String type = "\'" + paramsMap.get("type") + "\'";
+            sendMap.put("\'msgtype\'", type);
+            String content = "{\'content\':\'" + paramsMap.get("content") + "\'}";
+            sendMap.put("\'text\'", content);
         }
-        JSONObject wxResponse = sendCustomerMessage(redisAccessToken,sendMap);
-        return wxResponse;
+        JSONObject wxResponse = sendCustomerMessage(redisAccessToken, sendMap);
+        if (0 == (Integer) wxResponse.get("errcode")) {
+            //插入客服TO用户新消息
+            sendMap.clear();
+            //(#{ToUserName},#{FromUserName},#{Content},#{MsgType},#{CreateTime},#{MsgId});
+
+            sendMap.put("ToUserName", "gh_5230abfed2b9");//小程序原始ID
+
+            String adminToUserName = paramsMap.get("adminId") + "TO" + paramsMap.get("toUser");//客服TO用户发消息
+            sendMap.put("FromUserName", adminToUserName);
+
+            String content = (String) paramsMap.get("content");//消息内容
+            sendMap.put("Content", content);
+
+            String type = (String) paramsMap.get("type");//消息类型
+            sendMap.put("MsgType", type);
+
+            String date = paramsMap.get("date") + "";//创建消息时间
+            sendMap.put("CreateTime", date);
+
+            String msgId = MD5.random64NumStr();//消息ID
+            sendMap.put("MsgId", msgId);
+
+            String isReaded = "0";//消息状态:0-已读;1-未读
+            sendMap.put("isReaded", isReaded);
+
+            Integer count = bsenDao.addMessage(sendMap);
+            if (count > 0) {
+                response.put("code", "0000");
+                response.put("msg", "success");
+            } else {
+                response.put("code", "0001");
+                response.put("msg", "fail");
+            }
+        } else {
+            response.put("code", "0001");
+            response.put("msg", wxResponse.get("errmsg"));
+        }
+        return response;
     }
 
     @Override
@@ -1299,7 +1364,7 @@ public class BsenServiceImpl implements BsenService {
         String params = "grant_type=client_credential&appid=" + appid + "&secret=" + secret;
         String result = HttpRequest.sendGet(url, params);
         JSONObject data = JSONObject.parseObject(result);
-        logger.info("redis缓存失效后重新获取小程序全局唯一后台接口调用凭据: "+data);
+        logger.info("redis缓存失效后重新获取小程序全局唯一后台接口调用凭据: " + data);
         return data;
     }
 
@@ -1308,9 +1373,9 @@ public class BsenServiceImpl implements BsenService {
      * @time:20:04
      * @description:发送客服消息给用户
      */
-    private JSONObject sendCustomerMessage(String accessToken,Map<String,Object> jsonMap) {
+    private JSONObject sendCustomerMessage(String accessToken, Map<String, Object> jsonMap) {
         String url = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=" + accessToken;
-        JSONObject params = JSONObject.parseObject(jsonMap.toString().replace("=",":"));
+        JSONObject params = JSONObject.parseObject(jsonMap.toString().replace("=", ":"));
         String result = HttpRequest.sendPost(url, params.toJSONString());
         JSONObject data = JSONObject.parseObject(result);
         return data;
@@ -1319,12 +1384,12 @@ public class BsenServiceImpl implements BsenService {
     public static void main(String[] args) {
         BsenServiceImpl a = new BsenServiceImpl();
         Map<String, Object> map = new HashMap<>();
-        map.put("\'touser\'","\'oFmnm5S2acq0y7METZzQKJwXSltc\'");
-        map.put("\'msgtype\'","\'text\'");
-        map.put("\'text\'","{\'content\':\'发这些干什么?\'}");
+        map.put("\'touser\'", "\'oFmnm5S2acq0y7METZzQKJwXSltc\'");
+        map.put("\'msgtype\'", "\'text\'");
+        map.put("\'text\'", "{\'content\':\'发这些干什么?\'}");
 //        System.out.print(a.getAccessToken());
         String token = "18_QD8JRwpYAEKDpld4TriwhhXqnqG7adjdhhc23U3NYRkyHJsdKsrayzDlGYkVvitQ6I8TX4Vk4eJEOAZt0LNy3yQpxJ8FAVQJbmeIPNAKVkDkXT_mOlMnvo3HoxwRSIdAEAMND";
-        JSONObject response = a.sendCustomerMessage(token,map);
+        JSONObject response = a.sendCustomerMessage(token, map);
         System.out.print(response);
     }
 }

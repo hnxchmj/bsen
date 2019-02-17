@@ -119,4 +119,10 @@ public interface BsenDao {
     Integer  addMessage(Map<String,Object> params);
 
     Integer  updateUserIsSession(Map<String,Object> params);
+
+    Integer  selectToDoReplyMsgCount();
+
+    Integer  selectToDoOrderCount();
+
+    void  updateMsgStatus(Map<String,Object> params);
 }

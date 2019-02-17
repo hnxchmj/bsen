@@ -57,4 +57,26 @@ public class MD5 {
         String random = uuid.toString().replace("-", "");
         return random;
     }
+    /**
+     * MD5生成随机64位数字字符串
+     *
+     * @return String
+     */
+    public static String random64NumStr(){
+        Random ran = new Random();
+        StringBuffer random = new StringBuffer();
+        int num1 = 0;
+        for (int i = 0; i < 64 / 8; i++) {// 这里是产生9位的64/8=8次，
+            while (true) {
+                num1 = ran.nextInt(99999999);
+                System.out.println(num1);
+                if (num1 > 10000000) {
+                    random.append(num1);
+                    break;
+                }
+            }
+        }
+        System.out.println("你要的64位随机数是： "+random);
+        return random.toString();
+    }
 }

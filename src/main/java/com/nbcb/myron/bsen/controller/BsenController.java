@@ -2,8 +2,6 @@ package com.nbcb.myron.bsen.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.service.BsenService;
-import com.nbcb.myron.bsen.service.serviceImpl.BsenServiceImpl;
-import com.nbcb.myron.bsen.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.DigestException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -165,7 +161,7 @@ public class BsenController {
     @PostMapping("myinfo")
     public JSONObject myinfo(@RequestBody Map<String, Object> paramsMap) {
         logger.info("##进入获取我的信息" + paramsMap);
-        JSONObject response = bsenService.myinfo(paramsMap);
+        JSONObject response = bsenService.myInfo(paramsMap);
         logger.info("##response: " + response);
         return response;
     }
@@ -280,14 +276,16 @@ public class BsenController {
     }
 
     public static void main(String[] args) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("\'content\'","{\'content\':\'阿斯蒂芬\'}");
-        map.put("\'date\'",1548826871);
-        map.put("\'type\'","\'text\'");
-        map.put("\'uId\'","\'oFmnm5dqDVYCcX3RJKXjSlVdqyHw\'");
-
-        System.out.println(JSONObject.parseObject(map.toString().replace("=",":")));
-
+//        Map<String, Object> map = new HashMap<>();
+//        map.put("\'content\'","{\'content\':\'阿斯蒂芬\'}");
+//        map.put("\'date\'",1548826871);
+//        map.put("\'type\'","\'text\'");
+//        map.put("\'uId\'","\'oFmnm5dqDVYCcX3RJKXjSlVdqyHw\'");
+//
+//        System.out.println(JSONObject.parseObject(map.toString().replace("=",":")));
+        String amountMoney = "2800.00";
+        String a =Double.valueOf(amountMoney).intValue()*100+"";
+        System.out.println(a);
     }
 
 }

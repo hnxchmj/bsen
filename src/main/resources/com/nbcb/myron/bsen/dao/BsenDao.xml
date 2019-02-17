@@ -138,7 +138,7 @@
 
     <!--详情插入赞-->
     <insert id="insertDz">
-        INSERT INTO bsen_door_dev.users_products (pid,uid)
+        INSERT INTO users_products (pid,uid)
         VALUES(#{id},#{userId})
     </insert>
 
@@ -255,7 +255,7 @@
         CONCAT(j.path,j.filename) headImgUrl
         FROM
         (
-        SELECT * FROM users_dynamic m WHERE m.userid="oFmnm5dqDVYCcX3RJKXjSlVdqyHw"  ORDER BY m.time DESC
+        SELECT * FROM users_dynamic m WHERE m.userid="oFmnm5QU1lUnh_RgmwzUUwUopPqA"  ORDER BY m.time DESC
         ) i
         LEFT JOIN users j
         ON i.userid = j.uid
@@ -293,7 +293,7 @@
     </select>
 
     <insert id="addDynamicDesc" parameterType="com.nbcb.myron.bsen.module.UsersDynamic">
-        INSERT INTO bsen_door_dev.users_dynamic
+        INSERT INTO users_dynamic
         (userid,
         concent,
         TIME
@@ -309,7 +309,7 @@
     </select>
 
     <insert id="addDynamicImgs" parameterType="com.nbcb.myron.bsen.module.ProductsFiles">
-        INSERT INTO bsen_door_dev.products_files
+        INSERT INTO products_files
         (uid,did,pid,path,filename,classify)
         VALUES
         (#{uId},#{dId},#{pId},#{path},#{fileName},#{classify});
@@ -379,7 +379,7 @@
     </select>
 
     <insert id="insertNewUser">
-        INSERT INTO bsen_door_dev.users
+        INSERT INTO users
                     (uid,session_key,login_state,nickname,gender,path)
         VALUES (#{uId},#{session_key},#{login_state},#{nickName},#{gender},#{avatarUrl})
     </insert>
@@ -680,9 +680,9 @@
             select LAST_INSERT_ID();
         </selectKey>
         INSERT INTO message_tab
-        (toUserName,uId,message,messageType,createdTime,msgId)
+        (toUserName,uId,message,messageType,isReaded, createdTime,msgId)
         VALUES
-        (#{ToUserName},#{FromUserName},#{Content},#{MsgType},#{CreateTime},#{MsgId});
+        (#{ToUserName},#{FromUserName},#{Content},#{MsgType},#{isReaded},#{CreateTime},#{MsgId});
     </insert>
 
     <select id="selectMessageList" resultType="com.nbcb.myron.bsen.module.UserMessage" useCache="false">
@@ -724,6 +724,13 @@
         LIMIT #{page},#{offset};
     </select>
 
+    <update id="updateMsgStatus">
+        UPDATE message_tab i
+        SET
+        i.isReaded = '0'
+        where i.uId =#{userToAdmin}
+    </update>
+
     <update id="updateUserIsSession">
         UPDATE users i
         SET
@@ -731,4 +738,17 @@
         where i.uid =#{FromUserName}
     </update>
 
+    <select id="selectToDoReplyMsgCount" resultType="java.lang.Integer" useCache="false">
+      SELECT
+          COUNT(*)
+        FROM message_tab i
+        WHERE i.isReaded = '1';
+    </select>
+
+    <select id="selectToDoOrderCount" resultType="java.lang.Integer" useCache="false">
+      SELECT
+          COUNT(*)
+        FROM orders i
+        WHERE i.status ='1' AND i.order_status ='1';
+    </select>
 </mapper>

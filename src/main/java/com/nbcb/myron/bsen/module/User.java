@@ -15,6 +15,8 @@ public class User implements Serializable {
     private String session_key;
     private String loginState;
     private Integer authority;
+    private String toDoMsgFlag;//待回复消息标记
+    private String toDoOrderFlag;//待发货事件标记
 
     public String getuId() {
         return uId;
@@ -102,5 +104,21 @@ public class User implements Serializable {
 
     public void setAuthority(Integer authority) {
         this.authority = authority;
+    }
+
+    public String getToDoMsgFlag() {
+        return toDoMsgFlag;
+    }
+
+    public void setToDoMsgFlag(String toDoMsgFlag) {
+        this.toDoMsgFlag = toDoMsgFlag;
+    }
+
+    public String getToDoOrderFlag() {
+        return toDoOrderFlag;
+    }
+
+    public void setToDoOrderFlag(String toDoOrderFlag) {
+        this.toDoOrderFlag = toDoOrderFlag;
     }
 }

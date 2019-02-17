@@ -40,7 +40,7 @@ public interface BsenService {
 
     public JSONObject updateShoppingCartproNum(Map<String,Object> paramsMap);
 
-    public JSONObject myinfo(Map<String,Object> paramsMap);
+    public JSONObject myInfo(Map<String,Object> paramsMap);
 
     public Map<String,Object> prepayment(HttpServletRequest request,Map<String, Object> paramsMap);
 
