@@ -1038,7 +1038,7 @@ public class BsenServiceImpl implements BsenService {
             Integer isNum = bsenDao.selectMessageByMsgId(paramsMap);
             if (isNum == 0) {
                 //不存在时,插入新消息
-                String FromUserNameToAdmin = paramsMap.get("FromUserName") + "TO" + "oFmnm5dqDVYCcX3RJKXjSlVdqyHw";//用户TO客服发消息
+                String FromUserNameToAdmin = paramsMap.get("FromUserName") + "TO" + "oFmnm5QU1lUnh_RgmwzUUwUopPqA";//用户TO客服发消息
                 paramsMap.put("FromUserName", FromUserNameToAdmin);
                 String isReaded = "1";//消息状态:0-已读;1-未读
                 paramsMap.put("isReaded", isReaded);
