@@ -115,7 +115,8 @@
         FROM products i
         LEFT JOIN orders j
         ON i.pid = j.i_id
-        WHERE i.pid = #{id};
+        WHERE i.pid = #{id}
+         AND j.status='1';
     </select>
 
     <!--查询对当前商品点赞的所有人员-->
