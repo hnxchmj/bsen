@@ -66,6 +66,7 @@
         CONVERT(IFNULL(SUM(CONVERT(i.turn_over,SIGNED)),0),CHAR)
         FROM orders i
         WHERE i.i_id=#{pid}
+        AND i.status = '1'
     </select>
 
     <!--全部分类商品按价格排序-升-->
@@ -695,8 +696,8 @@
           FROM_UNIXTIME(i.createdTime,'%Y-%m-%d %H:%i:%s')    createTime
         FROM (SELECT
                 u.*,
-                CONCAT(u.uid,"TOoFmnm5dqDVYCcX3RJKXjSlVdqyHw")    sessionId,
-                CONCAT("oFmnm5dqDVYCcX3RJKXjSlVdqyHwTO",u.uid)    adminSessionId
+                CONCAT(u.uid,"TOoFmnm5QU1lUnh_RgmwzUUwUopPqA")    sessionId,
+                CONCAT("oFmnm5QU1lUnh_RgmwzUUwUopPqATO",u.uid)    adminSessionId
               FROM users u) j
           LEFT JOIN message_tab i
             ON (j.sessionId = i.uId
