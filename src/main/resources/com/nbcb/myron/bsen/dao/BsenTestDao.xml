@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nbcb.myron.bsen.dao.BsenTestDao">
+
+    <!--开启二级缓存-->
+    <cache type="com.nbcb.myron.bsen.common.RedisCache"></cache>
+    <!--获得http ip-->
+    <select id="getHttpAddress" resultType="com.nbcb.myron.bsen.module.DictEntity" useCache="false">
+        select i.dictname ip from dictionary i where i.dicttypeid = #{dicttypeid} and i.dictid = #{dictid};
+    </select>
+
+    <!--获取首页商品头部轮播图-->
+    <select id="getImageEntityList" resultType="com.nbcb.myron.bsen.module.ImageEntity" useCache="false">
+      SELECT i.pid id,i.t_url imgPath,i.t_url_name imgName FROM products i WHERE i.is_true = '0';
+    </select>
+
+    <!--砍价商品-->
+    <select id="getBestCutProducts" resultType="com.nbcb.myron.bsen.module.CutProduct" useCache="false">
+      SELECT
+          i.pid  id,
+          i.desc,
+          CONCAT(j.path,j.filename) imgUrl,
+          i.price oldPrice,
+          i.cutting_num cutPriceNum,
+          i.cuted_price newPrice
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE i.is_cut = '0' AND j.classify ='2'AND i.cutting_num > 50;
+    </select>
+
+    <!--精品-->
+    <select id="getBoutiqueProducts" resultType="com.nbcb.myron.bsen.module.BoutiqueProduct" useCache="false">
+        SELECT
+          i.pid id,
+          CONCAT(j.path,j.filename) imgUrl,
+          i.desc,
+          i.price oldPrice,
+          i.cuted_price newPrice
+        FROM products i
+          LEFT JOIN products_files j
+            ON i.pid = j.pid
+        WHERE j.classify = '0'
+            AND i.is_boutique = '0'
+        GROUP BY i.pid;
+    </select>
+
+    <!--全部分类商品-->
+    <select id="getProductLists" resultType="com.nbcb.myron.bsen.module.ProductListEntity" useCache="false">
+        SELECT
+        i.pid id,
+        i.desc,
+        i.price oldPrice,
+        i.cuted_price newPrice,
+        i.browsenum browseNum,
+        CONCAT(j.path,j.filename) imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
+    </select>
+
+    <!--单个商品被售数量-->
+    <select id="selectProductSoldNum" resultType="java.lang.String" useCache="false">
+        SELECT
+        CONVERT(IFNULL(SUM(CONVERT(i.turn_over,SIGNED)),0),CHAR)
+        FROM orders i
+        WHERE i.i_id=#{pid}
+        AND i.status = '1'
+    </select>
+
+    <!--全部分类商品按价格排序-升-->
+    <select id="getProductListsJgS" resultType="com.nbcb.myron.bsen.module.ProductListEntity" useCache="false">
+        SELECT
+        i.pid id,
+        i.desc,
+        i.price oldPrice,
+        i.cuted_price newPrice,
+        i.soldnum soldNum,
+        i.browsenum browseNum,
+        CONCAT(j.path,j.filename) imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
+        GROUP BY i.price ASC;
+    </select>
+
+    <!--全部分类商品按价格排序-降-->
+    <select id="getProductListsJgJ" resultType="com.nbcb.myron.bsen.module.ProductListEntity" useCache="false">
+        SELECT
+        i.pid id,
+        i.desc,
+        i.price oldPrice,
+        i.cuted_price newPrice,
+        i.soldnum soldNum,
+        i.browsenum browseNum,
+        CONCAT(j.path,j.filename) imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="classifyId !=  '00'">AND i.classify =#{classifyId}</if>
+        GROUP BY i.price DESC;
+    </select>
+
+    <!--获取商品详情-->
+    <select id="getDetail" resultMap="SwipeImgs" useCache="false">
+      SELECT
+          i.pid,
+          i.price,
+          i.cuted_price,
+          i.desc,
+          IFNULL(CONVERT(SUM(CONVERT(j.turn_over,SIGNED)),CHAR),0) AS soldnum,
+          i.browsenum
+        FROM products i
+        LEFT JOIN orders j
+        ON i.pid = j.i_id
+        WHERE i.pid = #{id}
+         AND j.status='1';
+    </select>
+
+    <!--查询对当前商品点赞的所有人员-->
+    <select id="selectParsePsersons" resultType="com.nbcb.myron.bsen.module.User" useCache="false">
+        SELECT
+        i.path avatarUrl
+        FROM users i
+        LEFT JOIN users_products j
+        ON i.uid = j.uid
+        LEFT JOIN products k
+        ON j.pid = k.pid
+        WHERE j.pid =#{id}
+        <if test="userId != null and userId !=''">AND j.uid=#{userId}</if>
+        AND j.isdz =1;
+    </select>
+
+    <!--查询对当前商品点过赞的人员头像-->
+    <select id="selectDz" resultType="com.nbcb.myron.bsen.module.UserProduct" useCache="false">
+      SELECT j.id,j.pid,j.uid,j.isdz FROM users_products j WHERE j.pid =#{id} AND j.uid =#{userId};
+    </select>
+
+    <!--详情插入赞-->
+    <insert id="insertDz">
+        INSERT INTO users_products (pid,uid)
+        VALUES(#{id},#{userId})
+    </insert>
+
+    <!--详情更新添加赞-->
+    <update id="updateDzP">
+        UPDATE users_products i
+        SET i.isdz = i.isdz + 1
+        where i.pid =#{id}
+        AND i.uid=#{userId}
+    </update>
+
+    <!--详情取消赞-->
+    <update id="updateDzM">
+        UPDATE users_products i
+        SET i.isdz = i.isdz - 1
+        where i.pid =#{id}
+        AND i.uid=#{userId}
+    </update>
+
+    <resultMap type="com.nbcb.myron.bsen.module.Product" id="SwipeImgs">
+        <id property="id" column="pid"/>
+        <result property="oldPrice" column="price"/>
+        <result property="newPrice" column="cuted_price"/>
+        <result property="desc" column="desc"/>
+        <result property="soldNum" column="soldnum"/>
+        <result property="browseNum" column="browsenum"/>
+        <collection property="imgUrls" ofType="com.nbcb.myron.bsen.module.ProductImg" column="{bridgeId1=pid}"
+                    select="getDetailImg1"></collection>
+        <collection property="detailImgUrls" ofType="com.nbcb.myron.bsen.module.ProductImg" column="{bridgeId2=pid}"
+                    select="getDetailImg2"></collection>
+        <collection property="evaluates" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId3=pid}"
+                    select="getEvaluates"></collection>
+    </resultMap>
+
+    <!--获取商品详情轮播图-->
+    <select id="getDetailImg1" resultType="com.nbcb.myron.bsen.module.ProductImg" useCache="false">
+      SELECT
+          i.path,
+          i.filename
+        FROM products_files i
+        WHERE i.pid = #{bridgeId1}
+        AND i.classify = '0';
+    </select>
+
+    <!--获取商品详情图-->
+    <select id="getDetailImg2" resultType="com.nbcb.myron.bsen.module.ProductImg" useCache="false">
+      SELECT
+          i.path,
+          i.filename
+        FROM products_files i
+        WHERE i.pid = #{bridgeId2}
+        AND i.classify = '1';
+    </select>
+
+    <!--获取商品评论-->
+    <select id="getEvaluates" resultType="com.nbcb.myron.bsen.module.User" useCache="false">
+      SELECT
+          i.turn_over turnover,
+          i.evaluate,
+          FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') time,
+          j.uid,
+          j.nickname
+        FROM orders i
+          LEFT JOIN users j
+            ON i.user_id = j.uid
+        WHERE i.i_id = #{bridgeId3}
+            AND i.evaluate != ' '
+    </select>
+
+    <!--所有砍价商品-->
+    <select id="getCutProductsList" resultType="com.nbcb.myron.bsen.module.CutProduct" useCache="false">
+      SELECT
+          i.pid            id,
+          i.desc,
+          CONCAT(j.path,j.filename)    imgUrl,
+          i.price          oldPrice,
+          i.cuted_price    newPrice,
+          i.soldnum    soldNum,
+          i.browsenum browseNum
+        FROM products i
+          LEFT JOIN products_files j
+            ON i.pid = j.pid
+        WHERE i.is_cut = '0'
+            AND j.classify = '2'
+    </select>
+
+    <!--搜索商品-->
+    <select id="getSearchProducts" resultType="com.nbcb.myron.bsen.module.ProductListEntity" useCache="false">
+        SELECT
+        i.pid id,
+        i.desc,
+        i.price oldPrice,
+        i.cuted_price newPrice,
+        i.soldnum soldNum,
+        i.browsenum browseNum,
+        CONCAT(j.path,j.filename) imgUrl
+        FROM products i
+        LEFT JOIN products_files j ON i.pid = j.pid
+        WHERE j.classify='2'
+        <if test="keyWord != null and keyWord !=''">AND i.desc like concat('%',#{keyWord},'%')</if>
+        GROUP BY i.pid;
+    </select>
+
+    <!--查询动态-->
+    <select id="getDynamics" resultMap="DynamicMap" useCache="false">
+       SELECT
+        i.id id,
+        i.userid uId,
+        i.concent content,
+        i.likenum likeNum,
+        i.browsenum browseNum,
+        FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') releaseTime,
+        j.nickname nickName,
+        CONCAT(j.path,j.filename) headImgUrl
+        FROM
+        (
+        SELECT * FROM users_dynamic m WHERE m.userid="oFmnm5QU1lUnh_RgmwzUUwUopPqA"  ORDER BY m.time DESC
+        ) i
+        LEFT JOIN users j
+        ON i.userid = j.uid
+        LEFT JOIN products_files k
+        ON i.id = k.did
+        WHERE j.authority=0
+        GROUP BY i.time DESC
+        LIMIT #{page},#{offset};
+    </select>
+
+    <resultMap id="DynamicMap" type="com.nbcb.myron.bsen.module.Dynamic">
+        <collection property="contentImgs" ofType="String" column="{bridgeId = id}" select="getContentImgs"/>
+        <collection property="dynamicComments" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId1 = id}"
+                    select="getDynamicComments"/>
+    </resultMap>
+
+    <select id="getContentImgs" resultType="String" useCache="false">
+        SELECT
+        CONCAT(k.path,k.filename) contentImgs
+        FROM
+        products_files k
+        WHERE k.classify ='3'
+        AND k.did = #{bridgeId};
+    </select>
+
+    <select id="getDynamicComments" resultType="com.nbcb.myron.bsen.module.User" useCache="false">
+        SELECT
+          j.uid uId,
+          j.nickname nickName,
+          i.content evaluate
+        FROM users_dynamics_comments i
+          LEFT JOIN users j
+            ON i.userid = j.uid
+        WHERE i.did = #{bridgeId1};
+    </select>
+
+    <insert id="addDynamicDesc" parameterType="com.nbcb.myron.bsen.module.UsersDynamic">
+        INSERT INTO users_dynamic
+        (userid,
+        concent,
+        TIME
+        )
+        VALUES
+        (#{userId},
+        #{desc},
+        #{time});
+    </insert>
+
+    <select id="selectDynamicNum" resultType="Integer" useCache="false">
+        SELECT COUNT(*) FROM users_dynamic;
+    </select>
+
+    <insert id="addDynamicImgs" parameterType="com.nbcb.myron.bsen.module.ProductsFiles">
+        INSERT INTO products_files
+        (uid,did,pid,path,filename,classify)
+        VALUES
+        (#{uId},#{dId},#{pId},#{path},#{fileName},#{classify});
+    </insert>
+
+    <!--查询动态详情-->
+    <select id="dynamicDetail" resultMap="Product" useCache="false">
+      SELECT
+        i.id id,
+        i.userid uId,
+        i.concent content,
+        i.likenum likeNum,
+        i.browsenum browseNum,
+        FROM_UNIXTIME(i.time/1000,'%Y-%m-%d %H:%i:%s') releaseTime,
+        j.nickname nickName,
+        CONCAT(j.path,j.filename) headImgUrl
+        FROM
+        (
+        SELECT * FROM users_dynamic m ORDER BY m.time DESC
+        ) i
+        LEFT JOIN users j
+        ON i.userid = j.uid
+        LEFT JOIN products_files k
+        ON i.id = k.did
+        WHERE i.id=#{id}
+        AND j.authority = 0
+        GROUP BY i.time
+    </select>
+
+    <resultMap id="Product" type="com.nbcb.myron.bsen.module.Dynamic">
+        <collection property="contentImgs" ofType="String" column="{bridgeId = id}" select="getContentImgs"/>
+        <collection property="dynamicComments" ofType="com.nbcb.myron.bsen.module.User" column="{bridgeId1 = id}"
+                    select="getDynamicComments"/>
+    </resultMap>
+
+    <update id="updateProductBrowseNum">
+        UPDATE products i
+        SET i.browsenum = i.browsenum + 1
+        <if test="id != null and id !=''">where i.pid =#{id}</if>
+    </update>
+
+    <update id="updataDynamicsBrowseNum">
+        UPDATE users_dynamic i
+        SET i.browsenum = i.browsenum + 1
+        <if test="id != null and id !=''">where i.id =#{id}</if>
+    </update>
+
+    <update id="updateUserLoginStatus">
+        UPDATE users i
+        SET
+        i.session_key = #{session_key},
+        i.login_state = #{login_state},
+        i.nickname = #{nickName},
+        i.gender = #{gender},
+        i.path = #{avatarUrl}
+        where i.uid =#{uId}
+    </update>
+
+    <select id="selectUser" resultType="com.nbcb.myron.bsen.module.User" useCache="false">
+        select
+          login_state loginState,
+          nickname nickName,
+          gender,
+          path avatarUrl,
+          authority
+        from users where uid = #{uId}
+    </select>
+
+    <insert id="insertNewUser">
+        INSERT INTO users
+                    (uid,session_key,login_state,nickname,gender,path)
+        VALUES (#{uId},#{session_key},#{login_state},#{nickName},#{gender},#{avatarUrl})
+    </insert>
+
+    <update id="updatePlus">
+        UPDATE users_dynamic i
+        SET i.likenum = i.likenum + 1
+        <if test="id != null and id !=''">where i.id =#{id}</if>
+    </update>
+
+    <update id="updateMinus">
+        UPDATE users_dynamic i
+        SET i.likenum = i.likenum - 1
+        where i.id =#{id}
+    </update>
+
+    <insert id="insertComment">
+        INSERT INTO users_dynamics_comments
+            (did,
+             userid,
+             content)
+        VALUES (#{id},
+        #{userId},
+        #{comment})
+    </insert>
+
+    <select id="selectUserComment" resultType="java.lang.Integer" useCache="false">
+        SELECT COUNT(*) FROM users_dynamics_comments i WHERE i.userid=#{userId} AND i.did=#{id};
+    </select>
+
+    <select id="selectProduct" resultType="java.lang.Integer" useCache="false">
+        SELECT
+          COUNT(*)
+        FROM orders i
+        WHERE i.user_id =#{userId} AND i.i_id=#{pid} AND i.status='0';
+    </select>
+
+    <insert id="addProductC" parameterType="com.nbcb.myron.bsen.module.Order">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID();
+        </selectKey>
+        INSERT INTO orders
+        (user_id,i_id,STATUS,turn_over,price,TIME)
+        VALUES
+        (#{userId},#{pid},#{status},#{turnOver},#{price},#{time});
+    </insert>
+
+    <insert id="addProductO">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID();
+        </selectKey>
+        INSERT INTO orders
+        (user_id,i_id,STATUS,turn_over,price,TIME,order_num,self_get,link_man,link_phone,link_address,order_status)
+        VALUES
+        (#{userId},#{pid},#{status},#{turnOver},#{price},#{time},#{order_num},#{self_get},#{link_man},#{link_phone},#{link_address},#{order_status});
+    </insert>
+
+    <update id="updateProduct">
+        UPDATE orders i
+        SET
+        i.turn_over = #{turnOver},
+        i.time = #{time}
+        WHERE i.user_id =#{userId} AND i.i_id=#{pid};
+    </update>
+
+    <!--更新订单信息-->
+    <update id="updateOrderInfo">
+        UPDATE orders t
+        SET
+        t.status = #{status},
+        t.turn_over = #{turnOver},
+        t.price = #{price},
+        t.time = #{time},
+        t.order_num =#{order_num},
+        t.self_get =#{self_get},
+        t.link_man =#{link_man},
+        t.link_phone =#{link_phone},
+        t.link_address =#{link_address}
+        t.order_status =#{order_status}
+        WHERE t.user_id = #{userId}
+        AND t.i_id = #{pid}
+    </update>
+
+    <select id="selectCartProductsCounts" resultType="java.lang.Integer" useCache="false">
+        SELECT COUNT(*) FROM orders i WHERE i.status='0' AND i.turn_over>0 AND i.user_id=#{userId} ;
+    </select>
+
+    <select id="selectDealingProduct" resultType="com.nbcb.myron.bsen.module.OrderInfo"  useCache="false">
+      SELECT
+          CONCAT(k.path,k.filename) imgUrl,
+          j.desc
+        FROM products j
+          LEFT JOIN products_files k
+            ON k.pid = j.pid
+        WHERE j.pid = #{pid}
+        AND k.classify='2'
+    </select>
+
+    <select id="selectCartProducts" resultType="com.nbcb.myron.bsen.module.OrderInfo"  useCache="false">
+        SELECT
+          i.id id,
+          i.i_id pid,
+          i.turn_over turnOver,
+          i.price,
+          concat(k.path,k.filename) imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+          AND i.id = #{id}
+          AND i.i_id = #{pid}
+          AND k.classify = '2'
+          AND i.status = #{status}
+           GROUP BY i.i_id
+    </select>
+
+    <select id="selectCartProductList" resultType="com.nbcb.myron.bsen.module.OrderInfo" useCache="false">
+        SELECT
+          i.id id,
+          i.i_id pid,
+          i.turn_over    turnOver,
+          i.price,
+          CONCAT(k.path,k.filename)    imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+            AND i.status = #{status}
+            AND k.classify = '2'
+    </select>
+
+    <update id="updateProductNum">
+        UPDATE orders
+        SET turn_over = #{turnOver}
+        WHERE user_id = #{userId}
+            AND id = #{id}
+    </update>
+    <select id="selectAllUserOrderlist" resultType="com.nbcb.myron.bsen.module.Order" useCache="false">
+        SELECT
+          i.id id,
+          i.i_id pid,
+          i.turn_over turnOver,
+          i.price,
+          i.time,
+          i.order_num,
+          CONCAT(k.path,k.filename) imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE 0 = #{uId}
+            AND k.classify = '2'
+            AND i.order_status = #{orderStatus}
+            GROUP BY i.time ASC
+    </select>
+    <select id="selectOrderlist" resultType="com.nbcb.myron.bsen.module.Order" useCache="false">
+        SELECT
+          i.id id,
+          i.i_id pid,
+          i.turn_over turnOver,
+          i.price,
+          i.time,
+          i.order_num,
+          CONCAT(k.path,k.filename) imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+            AND i.status = #{status}
+            AND k.classify = '2'
+            GROUP BY i.time DESC
+    </select>
+    <select id="selectOrder" resultType="com.nbcb.myron.bsen.module.OrderInfo" useCache="false">
+        SELECT
+          i.id id,
+          i.i_id pid,
+          i.turn_over turnOver,
+          i.price,
+          i.time,
+          i.order_num,
+          i.link_man name,
+          i.link_phone phone,
+          i.link_address address,
+          i.self_get,
+          i.evaluate,
+          i.evaluate_time evaluateTime,
+          i.order_status orderStatus,
+          i.transport_code transportCode,
+          i.transport_num transportNum,
+          FROM_UNIXTIME(i.flow_time/1000,'%Y-%m-%d %H:%i:%s') flowTime,
+          CONCAT(k.path,k.filename) imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE i.user_id = #{userId}
+            AND i.id = #{id}
+            AND k.classify = '2'
+            AND i.status = '1'
+    </select>
+    <select id="adminSelectOrder" resultType="com.nbcb.myron.bsen.module.OrderInfo" useCache="false">
+        SELECT
+          i.id id,
+          i.i_id pid,
+          i.turn_over turnOver,
+          i.price,
+          i.time,
+          i.order_num,
+          i.link_man name,
+          i.link_phone phone,
+          i.link_address address,
+          i.self_get,
+          i.evaluate,
+          i.evaluate_time evaluateTime,
+          i.order_status orderStatus,
+          i.transport_code transportCode,
+          i.transport_num transportNum,
+          FROM_UNIXTIME(i.flow_time/1000,'%Y-%m-%d %H:%i:%s') flowTime,
+          CONCAT(k.path,k.filename) imgUrl,
+          j.desc
+        FROM orders i
+          LEFT JOIN products_files k
+            ON i.i_id = k.pid
+          LEFT JOIN products j
+            ON k.pid = j.pid
+        WHERE 0 = #{uId}
+            AND i.id = #{id}
+            AND k.classify = '2'
+            AND i.status = '1'
+    </select>
+
+    <select id="selectUserOrderEvaluate" resultType="java.lang.Integer" useCache="false">
+        SELECT
+          COUNT(*)
+        FROM orders i
+        WHERE i.user_id =#{uId} AND i.id=#{id} AND i.evaluate != ' ';
+    </select>
+
+    <update id="updateOrderEvaluate">
+        UPDATE orders i
+        SET
+            i.evaluate = #{evaluate},
+            i.evaluate_time = #{evaluate_time}
+        WHERE i.user_id = #{uId}
+            AND i.id = #{id};
+    </update>
+
+    <select id="selectCompanyLikeName" resultType="com.nbcb.myron.bsen.module.Logistics" useCache="false">
+        SELECT
+          i.id,
+          i.company_name companyName,
+          i.company_code companyCode
+        FROM logistics i
+        WHERE i.company_name like concat('%',#{name},'%');
+    </select>
+
+    <select id="selecttransportCompany" resultType="com.nbcb.myron.bsen.module.Logistics" useCache="false">
+        SELECT
+          i.id,
+          i.company_name companyName,
+          i.company_code companyCode
+        FROM logistics i
+        WHERE i.company_code = #{transportCompany};
+    </select>
+
+    <update id="addOrderWuLiuInfo">
+        UPDATE orders i
+        SET
+            i.transport_code = #{transportCode},
+            i.transport_num = #{transportNum},
+             i.order_status = #{orderStatus}
+        WHERE 0 = #{uId}
+            AND i.id = #{id};
+    </update>
+
+    <select id="selectMessageByMsgId" resultType="java.lang.Integer" useCache="false">
+        SELECT
+          COUNT(*)
+        FROM message_tab i
+        WHERE i.msgId =#{MsgId};
+    </select>
+
+    <insert id="addMessage">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID();
+        </selectKey>
+        INSERT INTO message_tab
+        (toUserName,uId,message,messageType,isReaded, createdTime,msgId)
+        VALUES
+        (#{ToUserName},#{FromUserName},#{Content},#{MsgType},#{isReaded},#{CreateTime},#{MsgId});
+    </insert>
+
+    <select id="selectMessageList" resultType="com.nbcb.myron.bsen.module.UserMessage" useCache="false">
+        SELECT
+          j.uid         uId,
+          j.nickname    nickName,
+          j.path        headImgPath,
+          i.message     content,
+          i.isReaded,
+          FROM_UNIXTIME(i.createdTime,'%Y-%m-%d %H:%i:%s')    createTime
+        FROM (SELECT
+                u.*,
+                CONCAT(u.uid,"TOoFmnm5QU1lUnh_RgmwzUUwUopPqA")    sessionId,
+                CONCAT("oFmnm5QU1lUnh_RgmwzUUwUopPqATO",u.uid)    adminSessionId
+              FROM users u) j
+          LEFT JOIN message_tab i
+            ON (j.sessionId = i.uId
+                OR j.adminSessionId = i.uId)
+              AND i.id = (SELECT
+                            MAX(k.id)
+                          FROM message_tab k
+                          WHERE (j.sessionId = k.uId OR j.adminSessionId = k.uId))
+        WHERE j.isSession = '1' AND j.authority !=0
+        LIMIT #{page},#{offset};
+    </select>
+
+    <select id="getUserMessage" resultType="com.nbcb.myron.bsen.module.Message" useCache="false">
+      SELECT
+          j.id,
+          j.uId sessionID,
+          j.message content,
+          j.messageType type,
+          j.isReaded,
+          j.msgId,
+          FROM_UNIXTIME(j.createdTime,'%Y-%m-%d %H:%i:%s') createdTime
+        FROM (SELECT * FROM message_tab i order by i.createdTime DESC) j
+        WHERE (j.uId =#{userToAdmin} OR j.uId =#{adminToUser})
+        GROUP BY j.createdTime DESC
+        LIMIT #{page},#{offset};
+    </select>
+
+    <update id="updateMsgStatus">
+        UPDATE message_tab i
+        SET
+        i.isReaded = '0'
+        where i.uId =#{userToAdmin}
+    </update>
+
+    <update id="updateUserIsSession">
+        UPDATE users i
+        SET
+        i.isSession = '1'
+        where i.uid =#{FromUserName}
+    </update>
+
+    <select id="selectToDoReplyMsgCount" resultType="java.lang.Integer" useCache="false">
+      SELECT
+          COUNT(*)
+        FROM message_tab i
+        WHERE i.isReaded = '1';
+    </select>
+
+    <select id="selectToDoOrderCount" resultType="java.lang.Integer" useCache="false">
+      SELECT
+          COUNT(*)
+        FROM orders i
+        WHERE i.status ='1' AND i.order_status ='1';
+    </select>
+</mapper>

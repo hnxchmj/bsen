@@ -1,7 +1,7 @@
 package com.nbcb.myron.bsen.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.nbcb.myron.bsen.service.BsenService;
+import com.nbcb.myron.bsen.service.BsenTestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,15 +13,15 @@ import java.util.Map;
 /**
  * @author:黄孟军
  * @date:2019/1/2
- * @description:佰森小程序页面生产环境主控制类
+ * @description:佰森小程序页面测试环境主控制类
  */
 @Slf4j
 @RestController
-@RequestMapping("bs")
-public class BsenController {
+@RequestMapping("bs/test")
+public class BsenTestController {
 
     @Autowired
-    private BsenService bsenService;
+    private BsenTestService bsenTestService;
 
     /**
      * @date:2019/1/2
@@ -31,7 +31,7 @@ public class BsenController {
     @PostMapping("register")
     public JSONObject register(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入用户注册" + paramsMap);
-        JSONObject response = bsenService.register(paramsMap);
+        JSONObject response = bsenTestService.register(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -39,7 +39,7 @@ public class BsenController {
     @GetMapping("indexdata")
     public JSONObject getIndexData() {
         log.info("##进入bsen获取首页数据##");
-        JSONObject response = bsenService.getIndexData();
+        JSONObject response = bsenTestService.getIndexData();
         log.info("##response: " + response);
         return response;
     }
@@ -47,7 +47,7 @@ public class BsenController {
     @PostMapping("productlists")
     public JSONObject getProductLists(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入bsen商品列表##paramsMap: " + paramsMap);
-        JSONObject response = bsenService.getProductLists(paramsMap);
+        JSONObject response = bsenTestService.getProductLists(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -55,7 +55,7 @@ public class BsenController {
     @PostMapping("detail")
     public JSONObject getDetailData(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入bsen获取详情页数据##paramsMap: " + paramsMap);
-        JSONObject response = bsenService.getDetailData(paramsMap);
+        JSONObject response = bsenTestService.getDetailData(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -63,7 +63,7 @@ public class BsenController {
     @GetMapping("cutproductslist")
     public JSONObject getCutProductsList() {
         log.info("##进入bsen获取全部砍价商品##");
-        JSONObject response = bsenService.getCutProductsList();
+        JSONObject response = bsenTestService.getCutProductsList();
         log.info("##response: " + response);
         return response;
     }
@@ -71,7 +71,7 @@ public class BsenController {
     @GetMapping("searchproducts")
     public JSONObject getSearchProducts(String keyWord) {
         log.info("##进入bsen搜索商品## 参数keyWord: " + keyWord);
-        JSONObject response = bsenService.getSearchProducts(keyWord);
+        JSONObject response = bsenTestService.getSearchProducts(keyWord);
         log.info("##response: " + response);
         return response;
     }
@@ -79,7 +79,7 @@ public class BsenController {
     @PostMapping("dynamics")
     public JSONObject getDynamics(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入bsen获取动态" + paramsMap);
-        JSONObject response = bsenService.getDynamics(paramsMap);
+        JSONObject response = bsenTestService.getDynamics(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -87,7 +87,7 @@ public class BsenController {
     @PostMapping("adddynamicdesc")
     public JSONObject adddynamicdesc(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入bsen添加动态内容##desc: " + paramsMap);
-        JSONObject response = bsenService.adddynamicdesc(paramsMap);
+        JSONObject response = bsenTestService.adddynamicdesc(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -95,7 +95,7 @@ public class BsenController {
     @PostMapping("adddynamicimg")
     public JSONObject adddynamicimg(@RequestParam(value = "image") MultipartFile file) throws Exception {
         log.info("##进入bsen添加动态的图片附件##");
-        JSONObject response = bsenService.adddynamicimg(file);
+        JSONObject response = bsenTestService.adddynamicimg(file);
         log.info("##response: " + response);
         return response;
     }
@@ -103,7 +103,7 @@ public class BsenController {
     @PostMapping("dynamicdetail")
     public JSONObject dynamicdetail(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入bsen获取动态详情" + paramsMap);
-        JSONObject response = bsenService.dynamicdetail(paramsMap);
+        JSONObject response = bsenTestService.dynamicdetail(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -111,7 +111,7 @@ public class BsenController {
     @PostMapping("updatedz")
     public JSONObject updateDz(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入更新动态点赞" + paramsMap);
-        JSONObject response = bsenService.updateDz(paramsMap);
+        JSONObject response = bsenTestService.updateDz(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -119,7 +119,7 @@ public class BsenController {
     @PostMapping("addcomment")
     public JSONObject addComment(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入添加店铺动态评论" + paramsMap);
-        JSONObject response = bsenService.addComment(paramsMap);
+        JSONObject response = bsenTestService.addComment(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -127,7 +127,7 @@ public class BsenController {
     @PostMapping("addshoppingcart")
     public JSONObject addShoppingCart(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入添加商品到购物车" + paramsMap);
-        JSONObject response = bsenService.addShoppingCart(paramsMap);
+        JSONObject response = bsenTestService.addShoppingCart(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -135,7 +135,7 @@ public class BsenController {
     @PostMapping("getshoppingcartpro")
     public JSONObject getShoppingCartPro(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入获取购物车产品详情" + paramsMap);
-        JSONObject response = bsenService.getShoppingCartPro(paramsMap);
+        JSONObject response = bsenTestService.getShoppingCartPro(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -143,7 +143,7 @@ public class BsenController {
     @PostMapping("getshoppingcartlist")
     public JSONObject getShoppingCartList(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入获取购物车商品列表" + paramsMap);
-        JSONObject response = bsenService.getShoppingCartList(paramsMap);
+        JSONObject response = bsenTestService.getShoppingCartList(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -151,7 +151,7 @@ public class BsenController {
     @PostMapping("updateshoppingcartpronum")
     public JSONObject updateShoppingCartproNum(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入更新购物车商品数量" + paramsMap);
-        JSONObject response = bsenService.updateShoppingCartproNum(paramsMap);
+        JSONObject response = bsenTestService.updateShoppingCartproNum(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -159,7 +159,7 @@ public class BsenController {
     @PostMapping("myinfo")
     public JSONObject myinfo(@RequestBody Map<String, Object> paramsMap) {
         log.info("##进入获取我的信息" + paramsMap);
-        JSONObject response = bsenService.myInfo(paramsMap);
+        JSONObject response = bsenTestService.myInfo(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -167,7 +167,7 @@ public class BsenController {
     @PostMapping("prepayment")
     public Map<String, Object> prepayment(HttpServletRequest request, @RequestBody Map<String, Object> paramsMap) {
         log.info("##进入预支付统一下单##");
-        Map<String, Object> response = bsenService.prepayment(request, paramsMap);
+        Map<String, Object> response = bsenTestService.prepayment(request, paramsMap);
         log.info("微信最后拉起支付页需要的response: " + response);
         return response;
     }
@@ -175,7 +175,7 @@ public class BsenController {
     @PostMapping("updateorderinfo")
     public JSONObject updateOrderInfo(@RequestBody Map<String, Object> paramsMap) {
         log.info("##更新订单状态: " + paramsMap);
-        JSONObject response = bsenService.updateOrderInfo(paramsMap);
+        JSONObject response = bsenTestService.updateOrderInfo(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -183,7 +183,7 @@ public class BsenController {
     @PostMapping("myorderlist")
     public JSONObject myOrderList(@RequestBody Map<String, Object> paramsMap) {
         log.info("##我的订单列表: " + paramsMap);
-        JSONObject response = bsenService.myOrderList(paramsMap);
+        JSONObject response = bsenTestService.myOrderList(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -191,7 +191,7 @@ public class BsenController {
     @PostMapping("myorderinfo")
     public JSONObject myOrderInfo(@RequestBody Map<String, Object> paramsMap) {
         log.info("##我的订单详情: " + paramsMap);
-        JSONObject response = bsenService.myOrderInfo(paramsMap);
+        JSONObject response = bsenTestService.myOrderInfo(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -204,7 +204,7 @@ public class BsenController {
     @PostMapping("addorderevaluate")
     public JSONObject addOrderEvaluate(@RequestBody Map<String, Object> paramsMap) {
         log.info("##对我的订单添加评价: " + paramsMap);
-        JSONObject response = bsenService.addOrderEvaluate(paramsMap);
+        JSONObject response = bsenTestService.addOrderEvaluate(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -217,7 +217,7 @@ public class BsenController {
     @PostMapping("looksgoodsflow")
     public JSONObject looksGoodsFlow(@RequestBody Map<String, Object> paramsMap) {
         log.info("##查看物流信息: " + paramsMap);
-        JSONObject response = bsenService.looksGoodFlow(paramsMap);
+        JSONObject response = bsenTestService.looksGoodFlow(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -225,7 +225,7 @@ public class BsenController {
     @PostMapping("searchflowcompany")
     public JSONObject searchFlowCompany(@RequestBody Map<String, Object> paramsMap) {
         log.info("##搜索物流公司信息: " + paramsMap);
-        JSONObject response = bsenService.searchFlowCompany(paramsMap);
+        JSONObject response = bsenTestService.searchFlowCompany(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -233,7 +233,7 @@ public class BsenController {
     @PostMapping("addorderwuliuinfo")
     public JSONObject addOrderWuLiuInfo(@RequestBody Map<String, Object> paramsMap) {
         log.info("##添加物流公司信息: " + paramsMap);
-        JSONObject response = bsenService.addOrderWuLiuInfo(paramsMap);
+        JSONObject response = bsenTestService.addOrderWuLiuInfo(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -241,7 +241,7 @@ public class BsenController {
     @PostMapping("bsenkfts")
     public String bsenKFTS(@RequestBody Map<String, Object> paramsMap) {
         log.info("##小程序用户消息##" + paramsMap);
-        boolean response = bsenService.addUserMessage(paramsMap);
+        boolean response = bsenTestService.addUserMessage(paramsMap);
         log.info("##response: " + response);
         if (response) {
             return "success";
@@ -252,7 +252,7 @@ public class BsenController {
     @PostMapping("chatlist")
     public JSONObject chatList(@RequestBody Map<String, Object> paramsMap) {
         log.info("##小程序聊天列表##" + paramsMap);
-        JSONObject response = bsenService.chatList(paramsMap);
+        JSONObject response = bsenTestService.chatList(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -260,7 +260,7 @@ public class BsenController {
     @PostMapping("chatdetail")
     public JSONObject chatDetail(@RequestBody Map<String, Object> paramsMap) {
         log.info("##小程序聊天详情##" + paramsMap);
-        JSONObject response = bsenService.chatDetail(paramsMap);
+        JSONObject response = bsenTestService.chatDetail(paramsMap);
         log.info("##response: " + response);
         return response;
     }
@@ -268,7 +268,7 @@ public class BsenController {
     @PostMapping("replyusermsg")
     public JSONObject replayUser(@RequestBody Map<String, Object> paramsMap) {
         log.info("##小程序回复聊天##" + paramsMap);
-        JSONObject response = bsenService.replyUserMsg(paramsMap);
+        JSONObject response = bsenTestService.replyUserMsg(paramsMap);
         log.info("##response: " + response);
         return response;
     }
