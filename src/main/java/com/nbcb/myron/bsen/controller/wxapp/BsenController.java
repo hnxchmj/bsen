@@ -1,4 +1,4 @@
-package com.nbcb.myron.bsen.controller;
+package com.nbcb.myron.bsen.controller.wxapp;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nbcb.myron.bsen.service.BsenService;
